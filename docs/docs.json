@@ -1,0 +1,53 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "BlueBubbles Skills",
+  "colors": {
+    "primary": "#1d4ed8",
+    "light": "#2563eb",
+    "dark": "#1e40af"
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Skills",
+            "pages": [
+              "index",
+              "bluebubbles-cli-skill",
+              "sdk-unification"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "BlueBubbles API (SDK Spec)",
+            "openapi": "openapi.yaml"
+          }
+        ]
+      }
+    ]
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "SDK",
+        "href": "https://github.com/Jish2/bluebubbles-sdk"
+      },
+      {
+        "label": "Skill Repo",
+        "href": "https://github.com/anmho/skills"
+      }
+    ]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/anmho/skills"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "skills",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "docs:sync-openapi": "python3 scripts/sync-openapi.py",
+    "docs:dev": "npm run docs:sync-openapi && cd docs && mint dev --no-open",
+    "docs:validate": "npm run docs:sync-openapi && cd docs && mint validate"
+  },
+  "devDependencies": {
+    "mint": "^4.2.507"
+  }
+}
