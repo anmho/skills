@@ -1,26 +1,31 @@
 # anmho/skills
 
-Install the BlueBubbles skill:
+Custom Codex skills repository.
+
+## Install a skill
+
+```bash
+npx skills add anmho/skills --skill <skill-name> -y
+```
+
+Example:
 
 ```bash
 npx skills add anmho/skills --skill bluebubbles-cli -y
 ```
 
-Repository contents:
+## Helper script
 
-- `skills/bluebubbles-cli/SKILL.md`
-- `docs/` Mintlify docs site
-
-## Mint docs
-
-The API reference is unified with the SDK OpenAPI source:
-
-- `https://raw.githubusercontent.com/Jish2/bluebubbles-sdk/main/openapi.yaml`
-
-Run locally:
+Use the local helper script to list available skills or install one:
 
 ```bash
-npm install
-npm run docs:sync-openapi
-npm run docs:dev
+scripts/skills.sh list
+scripts/skills.sh install bluebubbles-cli
 ```
+
+## Repository structure
+
+- `scripts/skills.sh`
+- `skills/<skill-name>/SKILL.md`
+
+This repository intentionally stays lightweight and contains only skill definitions.
