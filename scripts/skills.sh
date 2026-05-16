@@ -10,12 +10,13 @@ usage() {
   cat <<'EOF'
 Usage:
   scripts/skills.sh list
-  scripts/skills.sh install <skill-name> [repo-slug]
+  scripts/skills.sh install <skill-name> [repo-slug] [extra npx skills add flags...]
 
 Examples:
   scripts/skills.sh list
   scripts/skills.sh install bluebubbles-cli
   scripts/skills.sh install bluebubbles-cli anmho/skills
+  scripts/skills.sh install auth-module anmho/skills --agent codex claude-code
 EOF
 }
 
@@ -26,6 +27,11 @@ list_skills() {
 install_skill() {
   local skill_name="${1:-}"
   local repo_slug="${2:-${REPO_SLUG}}"
+  if (( $# >= 2 )); then
+    shift 2
+  else
+    shift "$#"
+  fi
 
   if [[ -z "${skill_name}" ]]; then
     echo "Missing <skill-name>."
@@ -41,7 +47,7 @@ install_skill() {
     exit 1
   fi
 
-  npx skills add "${repo_slug}" --skill "${skill_name}" -y
+  npx skills add "${repo_slug}" --skill "${skill_name}" --global -y "$@"
 }
 
 main() {
