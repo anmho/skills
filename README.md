@@ -13,6 +13,7 @@ Example:
 ```bash
 npx skills add anmho/skills --skill bluebubbles-cli --global -y
 npx skills add anmho/skills --skill auth-module --global -y
+npx skills add anmho/skills --skill graphite --global -y
 npx skills add anmho/skills --skill symphony --global -y
 ```
 
