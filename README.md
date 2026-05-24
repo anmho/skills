@@ -13,7 +13,10 @@ Example:
 ```bash
 npx skills add anmho/skills --skill bluebubbles-cli --global -y
 npx skills add anmho/skills --skill auth-module --global -y
+npx skills add anmho/skills --skill symphony --global -y
 ```
+
+`npx skills add` symlinks into agent skill directories by default (`--copy` to materialize files).
 
 ## Helper script
 
@@ -36,6 +39,25 @@ Validate a skill locally:
 
 ```bash
 skills/auth-module/scripts/validate.sh
+# or all skills that ship a validate script:
+scripts/validate-all-skills.sh
+```
+
+## CI evals
+
+Pull requests and pushes that touch `skills/**` run [agent-skills-eval](https://github.com/darkrishabh/agent-skills-eval) in GitHub Actions (`.github/workflows/skill-evals.yml`):
+
+1. **validate** — structure checks (`scripts/validate-all-skills.sh`), no API key
+2. **eval** — `with_skill` vs `without_skill` judge grading (needs repo secret `OPENAI_API_KEY`)
+
+Configure the secret: GitHub → **anmho/skills** → Settings → Secrets → Actions → `OPENAI_API_KEY`.
+
+Run locally (same as CI):
+
+```bash
+export OPENAI_API_KEY=sk-...
+scripts/run-evals.sh
+open agent-skills-workspace/iteration-1/report/index.html
 ```
 
 This repository intentionally stays lightweight and contains only skill definitions.

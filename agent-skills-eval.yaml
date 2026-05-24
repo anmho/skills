@@ -1,0 +1,24 @@
+# https://github.com/darkrishabh/agent-skills-eval
+root: ./skills
+workspace: ./agent-skills-workspace
+baseline: true
+target: gpt-4o-mini
+judge: gpt-4o-mini
+baseUrl: https://api.openai.com/v1
+apiKeyEnv: OPENAI_API_KEY
+include:
+  - "auth-module"
+concurrency: 2
+layout: iteration
+strict: true
+report:
+  enabled: true
+  title: anmho/skills eval report
+logging:
+  format: jsonl
+  verbose: false
+  color: false
+targetParams:
+  temperature: 0
+judgeParams:
+  temperature: 0
