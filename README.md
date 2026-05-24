@@ -30,5 +30,12 @@ scripts/skills.sh install auth-module anmho/skills --agent codex claude-code
 
 - `scripts/skills.sh`
 - `skills/<skill-name>/SKILL.md`
+- `skills/<skill-name>/evals/evals.json` (optional quality evals per [agentskills.io](https://agentskills.io/skill-creation/evaluating-skills))
+
+Validate a skill locally:
+
+```bash
+skills/auth-module/scripts/validate.sh
+```
 
 This repository intentionally stays lightweight and contains only skill definitions.
