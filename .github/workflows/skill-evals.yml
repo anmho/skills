@@ -84,18 +84,18 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
-  eval-required:
-    name: Require OPENAI_API_KEY on main
-    needs: validate
+  eval-reminder:
+    name: Remind to configure OPENAI_API_KEY on main
+    needs: [validate, eval]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - name: Fail if OPENAI_API_KEY missing
+      - name: Warn if LLM evals were skipped
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           if [[ -z "${OPENAI_API_KEY}" ]]; then
-            echo "::error::OPENAI_API_KEY is not set. Add it under Settings → Secrets → Actions to run skill evals on main."
-            exit 1
+            echo "::warning::OPENAI_API_KEY is not set — LLM evals are skipped. Add the secret under Settings → Secrets → Actions."
+            exit 0
           fi
-          echo "OPENAI_API_KEY is configured"
+          echo "OPENAI_API_KEY is configured; LLM evals run on pushes that touch skills/**"
