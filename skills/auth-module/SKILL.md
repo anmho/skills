@@ -4,7 +4,7 @@ description: >-
   Work on the anmho auth repo (Better Auth API on Cloudflare Workers) and the
   authctl operator CLI for service OAuth clients and resource servers. Use when
   working in /Users/andrewho/repos/projects/auth, auth.anmho.com, auth-api,
-  authctl, Cloudflare Access, Vault secret/prod/apps/auth/authctl/cloudflare-access,
+  authctl, vault-env, Cloudflare Access, Vault secret/prod/apps/auth/authctl/cloudflare-access,
   service-to-service OAuth, or Terraform-owned auth infrastructure.
 ---
 
@@ -75,8 +75,34 @@ Or: `npm install -g @anmho/authctl` · or `bun run authctl:local -- …` without
 | `CLOUDFLARE_ACCESS_SERVICE_TOKEN_CLIENT_SECRET` | `CLOUDFLARE_ACCESS_SERVICE_TOKEN_CLIENT_SECRET` |
 
 Resolution order: CLI flags → env → **Vault** (if `vault` + token available) → defaults.  
-Opt out: `AUTHCTL_DISABLE_VAULT=1`.  
-Home shell: `vault-env` in `~/.zshrc` can export the same vars (no `authctl` alias).
+Opt out: `AUTHCTL_DISABLE_VAULT=1`.
+
+**Shell: `vault-env`** (defined in `~/.zshrc`, not an `authctl` alias):
+
+```bash
+vault-env   # load secrets into current shell + persist
+authctl clients list --json
+```
+
+What it does:
+
+1. Loads `VAULT_TOKEN`, `TF_VAR_vault_role_id`, `TF_VAR_vault_secret_id` from GCP Secret Manager (`anmho-infra-prod`).
+2. Uses that token to read provider + authctl secrets from Vault (parallel `vault kv get`).
+3. Exports env vars and calls `vault-env-persist` → writes `~/.config/secrets/env.zsh` (managed block, mode 600).
+
+Auth-related exports from `vault-env`:
+
+| Env var | Vault path |
+|---------|------------|
+| `AUTH_INTERNAL_BASE_URL` | `prod/apps/auth/authctl/cloudflare-access` |
+| `CLOUDFLARE_ACCESS_SERVICE_TOKEN_CLIENT_ID` | same |
+| `CLOUDFLARE_ACCESS_SERVICE_TOKEN_CLIENT_SECRET` | same |
+
+New shells auto-source persisted secrets: `[[ -f ~/.config/secrets/env.zsh ]] && source …` in `~/.zshrc`.  
+If authctl prod fails but `vault kv get` works, re-run `vault-env` so the three Access vars are in the managed block.  
+IDE terminals may not source `env.zsh`; run `vault-env` in that terminal or rely on authctl’s built-in Vault read.
+
+Related one-shot aliases in `~/.zshrc`: `vault-root-token`, `vault-role-id`, `vault-secret-id`, `*-api-key` / `*-api-token` for individual providers.
 
 **Common commands:**
 
