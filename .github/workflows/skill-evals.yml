@@ -37,7 +37,6 @@ jobs:
     name: Run LLM evals (agent-skills-eval)
     needs: validate
     runs-on: ubuntu-latest
-    if: ${{ secrets.OPENAI_API_KEY != '' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -48,13 +47,26 @@ jobs:
       - name: Install jq
         run: sudo apt-get update -qq && sudo apt-get install -y -qq jq
 
+      - name: Check for OPENAI_API_KEY
+        id: keycheck
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          if [[ -z "${OPENAI_API_KEY}" ]]; then
+            echo "skip=true" >> "${GITHUB_OUTPUT}"
+            echo "::warning::OPENAI_API_KEY not configured; skipping LLM evals"
+          else
+            echo "skip=false" >> "${GITHUB_OUTPUT}"
+          fi
+
       - name: Run skill evals
+        if: steps.keycheck.outputs.skip != 'true'
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: scripts/run-evals.sh
 
       - name: Summarize benchmark
-        if: always()
+        if: always() && steps.keycheck.outputs.skip != 'true'
         run: |
           bench="agent-skills-workspace/iteration-1/benchmark.json"
           if [[ -f "${bench}" ]]; then
@@ -63,7 +75,7 @@ jobs:
           fi
 
       - name: Upload eval artifacts
-        if: always()
+        if: always() && steps.keycheck.outputs.skip != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: skill-evals-${{ github.run_id }}
@@ -76,12 +88,14 @@ jobs:
     name: Require OPENAI_API_KEY on main
     needs: validate
     runs-on: ubuntu-latest
-    if: >-
-      github.event_name == 'push' &&
-      github.ref == 'refs/heads/main' &&
-      secrets.OPENAI_API_KEY == ''
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - name: Fail — configure repository secret
+      - name: Fail if OPENAI_API_KEY missing
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          echo "::error::OPENAI_API_KEY is not set. Add it under Settings → Secrets → Actions to run skill evals on main."
-          exit 1
+          if [[ -z "${OPENAI_API_KEY}" ]]; then
+            echo "::error::OPENAI_API_KEY is not set. Add it under Settings → Secrets → Actions to run skill evals on main."
+            exit 1
+          fi
+          echo "OPENAI_API_KEY is configured"
