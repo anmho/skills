@@ -1,0 +1,87 @@
+name: Skill evals
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "skills/**"
+      - "agent-skills-eval.yaml"
+      - "scripts/**"
+      - ".github/workflows/skill-evals.yml"
+  pull_request:
+    paths:
+      - "skills/**"
+      - "agent-skills-eval.yaml"
+      - "scripts/**"
+      - ".github/workflows/skill-evals.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: skill-evals-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate skill definitions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install jq
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq jq
+
+      - name: Validate skills with evals
+        run: scripts/validate-all-skills.sh
+
+  eval:
+    name: Run LLM evals (agent-skills-eval)
+    needs: validate
+    runs-on: ubuntu-latest
+    if: ${{ secrets.OPENAI_API_KEY != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install jq
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq jq
+
+      - name: Run skill evals
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: scripts/run-evals.sh
+
+      - name: Summarize benchmark
+        if: always()
+        run: |
+          bench="agent-skills-workspace/iteration-1/benchmark.json"
+          if [[ -f "${bench}" ]]; then
+            echo "## Skill eval benchmark" >> "$GITHUB_STEP_SUMMARY"
+            jq '.' "${bench}" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload eval artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skill-evals-${{ github.run_id }}
+          path: |
+            agent-skills-workspace/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  eval-required:
+    name: Require OPENAI_API_KEY on main
+    needs: validate
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      secrets.OPENAI_API_KEY == ''
+    steps:
+      - name: Fail — configure repository secret
+        run: |
+          echo "::error::OPENAI_API_KEY is not set. Add it under Settings → Secrets → Actions to run skill evals on main."
+          exit 1
