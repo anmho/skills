@@ -1,60 +1,128 @@
 ---
 name: auth-module
-description: Work on Andrew Ho's auth module, including the Better Auth API server, authctl CLI, local development, deploy verification, and Terraform-owned auth infrastructure. Use when working in /Users/andrewho/repos/projects/auth, discussing auth.anmho.com, auth-api, authctl, service OAuth clients, Better Auth, Cloudflare Workers deployment, Cloudflare Access protection, or Vault-backed auth secrets.
+description: >-
+  Work on the anmho auth repo (Better Auth API on Cloudflare Workers) and the
+  authctl operator CLI for service OAuth clients and resource servers. Use when
+  working in /Users/andrewho/repos/projects/auth, auth.anmho.com, auth-api,
+  authctl, vault-env, Cloudflare Access, Vault secret/prod/apps/auth/authctl/cloudflare-access,
+  service-to-service OAuth, or Terraform-owned auth infrastructure.
 ---
 
-# Auth Module
+# Auth module
 
-## Ownership
+## Repos
 
-- Auth repo: `/Users/andrewho/repos/projects/auth`
-- Terraform repo: `/Users/andrewho/repos/projects/terraform`
-- Auth owns API code, migrations, Wrangler config, local dev, tests, schemas, and `authctl`.
-- Terraform owns Neon, Hyperdrive, Cloudflare Access app/service token, Vault bootstrap paths, and GitHub Actions Vault OIDC deploy role.
-- Always include the full checkout path in status and final messages.
+| What | Path |
+|------|------|
+| Auth (API + authctl) | `/Users/andrewho/repos/projects/auth` |
+| Terraform (Neon, Access, Vault bootstrap) | `/Users/andrewho/repos/projects/terraform` |
 
-## Map
+Auth owns: API code, migrations, Wrangler, local dev, schemas, `authctl`.  
+Terraform owns: Neon, Hyperdrive, Cloudflare Access app/service token, Vault paths, deploy OIDC.
 
-- `apps/auth-api/src/index.ts`: shared Hono app, routes, Bun local runner.
-- `apps/auth-api/src/worker.ts`: Cloudflare Worker adapter export.
-- `apps/auth-api/src/env.ts`, `auth.ts`: `AuthEnv`, local env parsing, Better Auth construction.
-- `apps/auth-api/src/internal-routes.ts`, `oauth-clients.ts`: Access-protected authctl API and service OAuth client control plane.
-- `apps/auth-api/src/db/oauth-client-state.ts`, `audit-store.ts`: OAuth client store and audit event adapters.
-- `packages/schemas/src/index.ts`: shared Zod contracts and naming helpers.
-- `tools/authctl/src/index.ts`, `client.ts`, `smoke.ts`: CLI, API client, smoke proof.
+Always cite full checkout paths in status messages.
 
-Call it `auth-api`, `auth server`, or `auth API`; use "worker" only for the Cloudflare deployment adapter.
+## auth-api (server)
 
-## Local Dev
+**Stack:** Hono app, Better Auth, Bun local runner, Cloudflare Worker in prod.
+
+| File | Role |
+|------|------|
+| `apps/auth-api/src/index.ts` | Shared app, routes, local server |
+| `apps/auth-api/src/worker.ts` | Worker export |
+| `apps/auth-api/src/env.ts`, `auth.ts` | `AuthEnv`, Better Auth setup |
+| `apps/auth-api/src/internal-routes.ts`, `oauth-clients.ts` | Access-protected `/internal/*` (authctl API) |
+| `apps/auth-api/src/db/oauth-client-state.ts`, `audit-store.ts` | OAuth clients + audit log |
+| `packages/schemas/src/index.ts` | Shared Zod contracts |
+
+**Local dev:**
 
 ```bash
 cd /Users/andrewho/repos/projects/auth
 bun install
-bun dev
+bun dev   # Compose Postgres, migrations, http://localhost:8787
 ```
 
-`bun dev` should be idempotent: it starts Compose Postgres, runs migrations, and serves `http://localhost:8787`. If the port is occupied, inspect the running process before changing scripts.
+Public OAuth surface: `https://auth.anmho.com/api/auth` (issuer).  
+Internal control plane: `https://auth.anmho.com/internal` (Cloudflare Access only).
+
+## authctl (CLI)
+
+**Package:** `tools/authctl` → npm `@anmho/authctl`  
+**Entry:** `tools/authctl/src/index.ts`, `client.ts`, `smoke.ts`
+
+| Mode | Base URL | Access headers |
+|------|----------|----------------|
+| `--local` | `http://localhost:8787/internal` | Not required |
+| Production | `https://auth.anmho.com/internal` | CF Access service token |
+
+**Install / link:**
 
 ```bash
 cd /Users/andrewho/repos/projects/auth
-bun run authctl:link
-hash -r
-which authctl
+bun run authctl:link && hash -r
 authctl --local doctor --json
+```
+
+Or: `npm install -g @anmho/authctl` · or `bun run authctl:local -- …` without linking.
+
+**Production credentials** (Vault: `secret/prod/apps/auth/authctl/cloudflare-access`):
+
+| Vault field | Env var |
+|-------------|---------|
+| `AUTH_INTERNAL_BASE_URL` | `AUTH_INTERNAL_BASE_URL` |
+| `CLOUDFLARE_ACCESS_SERVICE_TOKEN_CLIENT_ID` | `CLOUDFLARE_ACCESS_SERVICE_TOKEN_CLIENT_ID` |
+| `CLOUDFLARE_ACCESS_SERVICE_TOKEN_CLIENT_SECRET` | `CLOUDFLARE_ACCESS_SERVICE_TOKEN_CLIENT_SECRET` |
+
+Resolution order: CLI flags → env → **Vault** (if `vault` + token available) → defaults.  
+Opt out: `AUTHCTL_DISABLE_VAULT=1`.
+
+**Shell: `vault-env`** (defined in `~/.zshrc`, not an `authctl` alias):
+
+```bash
+vault-env   # load secrets into current shell + persist
+authctl clients list --json
+```
+
+What it does:
+
+1. Loads `VAULT_TOKEN`, `TF_VAR_vault_role_id`, `TF_VAR_vault_secret_id` from GCP Secret Manager (`anmho-infra-prod`).
+2. Uses that token to read provider + authctl secrets from Vault (parallel `vault kv get`).
+3. Exports env vars and calls `vault-env-persist` → writes `~/.config/secrets/env.zsh` (managed block, mode 600).
+
+Auth-related exports from `vault-env`:
+
+| Env var | Vault path |
+|---------|------------|
+| `AUTH_INTERNAL_BASE_URL` | `prod/apps/auth/authctl/cloudflare-access` |
+| `CLOUDFLARE_ACCESS_SERVICE_TOKEN_CLIENT_ID` | same |
+| `CLOUDFLARE_ACCESS_SERVICE_TOKEN_CLIENT_SECRET` | same |
+
+New shells auto-source persisted secrets: `[[ -f ~/.config/secrets/env.zsh ]] && source …` in `~/.zshrc`.  
+If authctl prod fails but `vault kv get` works, re-run `vault-env` so the three Access vars are in the managed block.  
+IDE terminals may not source `env.zsh`; run `vault-env` in that terminal or rely on authctl’s built-in Vault read.
+
+Related one-shot aliases in `~/.zshrc`: `vault-root-token`, `vault-role-id`, `vault-secret-id`, `*-api-key` / `*-api-token` for individual providers.
+
+**Common commands:**
+
+```bash
+authctl doctor --json
+authctl --local clients list --json
+authctl clients list --json                    # prod
+authctl resource-servers list --stage prod --json
+authctl clients create --client-app agent --client-identity server \
+  --resource-server billing --scope invoices:read --stage prod --yes --json
 authctl --local smoke --json
 ```
 
-No-link mode and teardown:
+**Troubleshooting prod 401:** See [reference.md](reference.md) — distinguish missing Access credentials vs Cloudflare rejecting the service token.
 
-```bash
-bun run authctl:local -- doctor --json
-bun run authctl:local -- clients list --json
-bun run dev:down
-```
+**Operator runbook in auth repo:** `docs/runbooks/authctl-operator-access.md`
 
 ## Verification
 
-For auth repo changes:
+**Auth repo changes:**
 
 ```bash
 cd /Users/andrewho/repos/projects/auth
@@ -63,36 +131,32 @@ bun run typecheck
 bun run authctl:build
 bun run cf-types
 git diff --exit-code apps/auth-api/worker-configuration.d.ts
-git diff --check
 bun run dev:smoke
 ```
 
-For production checks, never print secret values:
+**Production (never print secrets):**
 
 ```bash
-npm view @anmho/authctl version bin dist.integrity --json
-curl -sS https://auth.anmho.com/.well-known/oauth-authorization-server/api/auth | jq '{issuer, token_endpoint, jwks_uri}'
 authctl doctor --json
-authctl smoke --json
+curl -sS https://auth.anmho.com/.well-known/oauth-authorization-server/api/auth \
+  | jq '{issuer, token_endpoint, jwks_uri}'
 ```
-
-If `authctl doctor` reports missing Access credentials, expected Vault path is `secret/prod/apps/auth/authctl/cloudflare-access`; fields are `AUTH_INTERNAL_BASE_URL`, `CLOUDFLARE_ACCESS_SERVICE_TOKEN_CLIENT_ID`, and `CLOUDFLARE_ACCESS_SERVICE_TOKEN_CLIENT_SECRET`.
 
 ## Guardrails
 
-- Product purpose is service-to-service OAuth.
-- `authctl` creates userless Better Auth `oauth_client` rows. `client_id` comes from client app, identity, resource server, and stage.
-- Canonical app/resource fields live in `oauth_client.metadata` because Better Auth has no dedicated columns for them.
-- `audit_event` is the operator log for authctl mutations, not token protocol state.
-- Better Auth `user`, `session`, `account`, and `verification` tables are framework surface, not the M2M domain model.
-- Cloudflare Access protects `/internal/*`; use Access headers for audit identity, but do not duplicate Access authentication in business logic.
-- Use `https://auth.anmho.com/api/auth` as issuer audience unless a resource-server audience is deliberately added through `AUTH_VALID_AUDIENCES`.
+- Product is **service-to-service OAuth** (userless `oauth_client` rows).
+- `client_id` = app + identity + resource server + stage; extra fields in `oauth_client.metadata`.
+- `audit_event` = operator/audit log for authctl mutations, not token protocol state.
+- `user` / `session` / `account` / `verification` = Better Auth framework tables, not the M2M domain model.
+- `/internal/*` is protected by Cloudflare Access; do not re-implement Access auth in app logic.
+- Default issuer audience: `https://auth.anmho.com/api/auth` unless `AUTH_VALID_AUDIENCES` adds resource-server audiences.
 
 ## Deploy
 
-Auth workflows: `ci.yml`, `deploy-auth-api.yml`, `publish-authctl.yml`, and any integration/smoke workflow. Deploy depends on Vault GitHub OIDC role `anmho-auth-deploy`, repo variable `CLOUDFLARE_ACCOUNT_ID`, and Worker secret `BETTER_AUTH_SECRET`; verify presence and status without revealing values.
+Workflows: `ci.yml`, `deploy-auth-api.yml`, `publish-authctl.yml`.  
+Needs: Vault OIDC `anmho-auth-deploy`, `CLOUDFLARE_ACCOUNT_ID`, Worker `BETTER_AUTH_SECRET` (verify presence only).
 
-For Terraform changes:
+Terraform vault project:
 
 ```bash
 cd /Users/andrewho/repos/projects/terraform
@@ -100,3 +164,7 @@ terraform -chdir=projects/vault fmt -check
 terraform -chdir=projects/vault validate
 terraform -chdir=projects/vault plan
 ```
+
+## More detail
+
+- authctl Access troubleshooting, `vault-env`, 401 vs missing creds: [reference.md](reference.md)
