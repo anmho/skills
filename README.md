@@ -14,6 +14,7 @@ Example:
 npx skills add anmho/skills --skill bluebubbles-cli --global -y
 npx skills add anmho/skills --skill auth-module --global -y
 npx skills add anmho/skills --skill graphite --global -y
+npx skills add anmho/skills --skill notifications --global -y
 npx skills add anmho/skills --skill symphony --global -y
 ```
 
@@ -27,6 +28,7 @@ Use the local helper script to list available skills or install one:
 scripts/skills.sh list
 scripts/skills.sh install bluebubbles-cli
 scripts/skills.sh install auth-module
+scripts/skills.sh install notifications
 scripts/skills.sh install auth-module anmho/skills --agent codex claude-code
 ```
 
