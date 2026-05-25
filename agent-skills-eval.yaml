@@ -7,7 +7,7 @@ judge: gpt-4o-mini
 baseUrl: https://api.openai.com/v1
 apiKeyEnv: OPENAI_API_KEY
 include:
-  - "auth-module"
+  - "auth"
   - "notifications"
 concurrency: 2
 layout: iteration

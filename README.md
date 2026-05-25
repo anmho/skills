@@ -12,7 +12,7 @@ Example:
 
 ```bash
 npx skills add anmho/skills --skill bluebubbles-cli --global -y
-npx skills add anmho/skills --skill auth-module --global -y
+npx skills add anmho/skills --skill auth --global -y
 npx skills add anmho/skills --skill graphite --global -y
 npx skills add anmho/skills --skill notifications --global -y
 npx skills add anmho/skills --skill symphony --global -y
@@ -27,9 +27,9 @@ Use the local helper script to list available skills or install one:
 ```bash
 scripts/skills.sh list
 scripts/skills.sh install bluebubbles-cli
-scripts/skills.sh install auth-module
+scripts/skills.sh install auth
 scripts/skills.sh install notifications
-scripts/skills.sh install auth-module anmho/skills --agent codex claude-code
+scripts/skills.sh install auth anmho/skills --agent codex claude-code
 ```
 
 ## Repository structure
@@ -41,7 +41,7 @@ scripts/skills.sh install auth-module anmho/skills --agent codex claude-code
 Validate a skill locally:
 
 ```bash
-skills/auth-module/scripts/validate.sh
+skills/auth/scripts/validate.sh
 # or all skills that ship a validate script:
 scripts/validate-all-skills.sh
 ```

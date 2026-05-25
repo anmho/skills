@@ -1,0 +1,56 @@
+{
+  "skill_name": "auth",
+  "evals": [
+    {
+      "id": "auth-repo-boundary",
+      "name": "Auth repo boundary and verification",
+      "prompt": "I'm changing authctl and the Better Auth Worker in /Users/andrewho/repos/projects/auth. What repo boundaries and checks should I keep in mind?",
+      "expected_output": "Identifies the auth repo path, says auth owns API/authctl/package code while Terraform owns Neon/Hyperdrive/Access/Vault bootstrap, and recommends bun test, typecheck, authctl build, cf-types, generated worker types diff, and git diff --check.",
+      "assertions": [
+        "References /Users/andrewho/repos/projects/auth",
+        "Separates auth-owned code from Terraform-owned infrastructure",
+        "Mentions bun test and bun run typecheck",
+        "Mentions bun run authctl:build or authctl build",
+        "Mentions bun run cf-types and checking apps/auth-api/worker-configuration.d.ts"
+      ]
+    },
+    {
+      "id": "prod-access-401",
+      "name": "Production authctl Cloudflare Access 401",
+      "prompt": "authctl clients list --json against production returns a Cloudflare 401 body with aud and ray_id. What does that mean and what should I check?",
+      "expected_output": "Explains that Cloudflare Access rejected the service-token request before auth-api handled it. Recommends authctl doctor --json, checking the three Access env vars or Vault path, re-running vault-env, and comparing Vault against the Terraform-managed Access service token.",
+      "assertions": [
+        "States the 401 is from Cloudflare Access before auth-api",
+        "Mentions authctl doctor --json",
+        "References prod/apps/auth/authctl/cloudflare-access or the three Access env vars",
+        "Mentions vault-env or Vault credential refresh",
+        "Does not recommend removing Access protection from /internal routes"
+      ]
+    },
+    {
+      "id": "package-publish-truth",
+      "name": "Published package truth",
+      "prompt": "I changed authctl locally. How should I prove users can get the change from npm?",
+      "expected_output": "Says not to rely on local dist or checkout. Verifies npm latest with npm view and npx --yes @anmho/authctl@latest, and checks the workflow state if publishing is expected.",
+      "assertions": [
+        "Mentions npm view @anmho/authctl version",
+        "Mentions npx --yes @anmho/authctl@latest",
+        "Warns that local checkout or dist output is not enough",
+        "Mentions live workflow or registry state"
+      ]
+    },
+    {
+      "id": "client-refresher-pattern",
+      "name": "Client credentials helper pattern",
+      "prompt": "I'm adding another auth client credentials helper package. What pattern should I default to?",
+      "expected_output": "Defaults to an in-process background refresher with getToken(), uses a real Vault SDK/client where relevant, points to packages/auth-client, go/authclient, and examples, and avoids sidecars or YAML sync unless requested.",
+      "assertions": [
+        "Mentions in-process background refresh",
+        "Mentions getToken",
+        "Mentions a real Vault SDK or client",
+        "References packages/auth-client or go/authclient",
+        "Does not recommend YAML sync as the default"
+      ]
+    }
+  ]
+}
