@@ -16,6 +16,7 @@ npx skills add anmho/skills --skill auth-module --global -y
 npx skills add anmho/skills --skill graphite --global -y
 npx skills add anmho/skills --skill notifications --global -y
 npx skills add anmho/skills --skill symphony --global -y
+npx skills add anmho/skills --skill tab-organizer-cleanup --global -y
 ```
 
 `npx skills add` symlinks into agent skill directories by default (`--copy` to materialize files).
