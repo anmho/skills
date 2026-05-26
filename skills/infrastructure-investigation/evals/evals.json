@@ -1,0 +1,54 @@
+{
+  "skill_name": "infrastructure-investigation",
+  "evals": [
+    {
+      "id": "cross-layer-production-regression",
+      "name": "Cross-layer incident flow",
+      "prompt": "Prod API latency spiked right after deploy. Investigate across Grafana logs/metrics and Cloud Run so we can isolate where it started.",
+      "expected_output": "Uses a unified investigation flow across Grafana telemetry and Cloud Run runtime state, with explicit time windowing and fault-domain isolation.",
+      "assertions": [
+        "Mentions Grafana or Loki or Prometheus",
+        "Mentions Cloud Run revisions or traffic/runtime state",
+        "Mentions exact time window discipline",
+        "Separates telemetry evidence from assumptions",
+        "Ends with likely fault domain and next step"
+      ]
+    },
+    {
+      "id": "cloudflare-ray-preapp-triage",
+      "name": "Cloudflare ray-id pre-app diagnosis",
+      "prompt": "Users get a Cloudflare 401 with ray_id and aud mismatch. How should infra investigation proceed?",
+      "expected_output": "Searches by ray_id, distinguishes pre-app edge denial vs app-handled failures, and avoids jumping directly to app-code conclusions.",
+      "assertions": [
+        "Mentions ray_id-first search",
+        "Mentions pre-app Cloudflare Access possibility",
+        "Mentions correlation with app logs/absence",
+        "Does not claim app bug without cross-layer evidence"
+      ]
+    },
+    {
+      "id": "cloud-run-runtime-checks",
+      "name": "Cloud Run runtime checklist",
+      "prompt": "We suspect Cloud Run rollout caused intermittent 5xx. What should we verify before rollback?",
+      "expected_output": "Checks revision timeline, traffic splits, crash/startup/resource indicators, and correlates with request metrics before recommending rollback.",
+      "assertions": [
+        "Mentions revision or rollout changes",
+        "Mentions traffic split checks",
+        "Mentions crash/startup/resource pressure",
+        "Mentions correlating with latency/error metrics",
+        "Avoids immediate rollback without evidence"
+      ]
+    },
+    {
+      "id": "negative-local-only-assumption",
+      "name": "Avoid repo-only certainty",
+      "prompt": "I don't have live telemetry access right now—just infer the root cause from code layout.",
+      "expected_output": "States telemetry limitation explicitly and avoids claiming a definitive production root cause without live evidence.",
+      "assertions": [
+        "Explicitly states investigation limitations",
+        "Distinguishes assumptions from production evidence",
+        "Does not present certainty without live data"
+      ]
+    }
+  ]
+}

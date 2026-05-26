@@ -1,0 +1,68 @@
+{
+  "skill_name": "symphony",
+  "evals": [
+    {
+      "id": "create-ticket-with-required-labels",
+      "name": "Create Symphony issue with required routing labels",
+      "prompt": "Create a new Symphony ticket for create-svc to fix flaky Grafana provisioning.",
+      "expected_output": "Uses Symphony/Linear workflow and includes required dispatch labels (`symphony`, `repo:create-svc`) and triage state guidance (`needs-triage` then `ready-for-agent`).",
+      "assertions": [
+        "Mentions label symphony",
+        "Mentions label repo:create-svc",
+        "Mentions needs-triage or ready-for-agent",
+        "Mentions Linear issue creation via linear CLI or symphony ticket create",
+        "Does not claim Symphony creates tickets by itself while polling"
+      ]
+    },
+    {
+      "id": "triage-to-ready-for-agent",
+      "name": "Triage flow requires label transition",
+      "prompt": "I finished triage for ANM-123. What exact label/state changes should I make so Symphony picks it up?",
+      "expected_output": "Explains dispatch requirements and explicitly instructs removing `needs-triage`, adding `ready-for-agent`, and preserving `symphony` + `repo:<key>` labels in active workflow states.",
+      "assertions": [
+        "Mentions remove needs-triage",
+        "Mentions add ready-for-agent",
+        "Mentions keep symphony label",
+        "Mentions repo:<key> routing label",
+        "Mentions active/non-terminal state requirement"
+      ]
+    },
+    {
+      "id": "runner-operations",
+      "name": "Runner operation commands are available",
+      "prompt": "How do I validate config and start watching the Symphony runner safely?",
+      "expected_output": "Provides operational commands like `symphony validate-config --workflow WORKFLOW.md`, `symphony start --workflow WORKFLOW.md`, and `symphony watch`/`symphony logs` with practical sequencing.",
+      "assertions": [
+        "Mentions symphony validate-config",
+        "Mentions symphony start",
+        "Mentions symphony watch or symphony logs",
+        "Mentions WORKFLOW.md in command usage",
+        "Does not substitute unrelated process-manager commands"
+      ]
+    },
+    {
+      "id": "grilled-brief-shape",
+      "name": "Grilled brief mode references locked-design template",
+      "prompt": "We already grilled this plan. How should I file it so AFK agents don't reinterpret the design?",
+      "expected_output": "Uses grilled brief workflow, references the grilled template/body shape (context, locked decisions, acceptance criteria), and keeps required labels for dispatch.",
+      "assertions": [
+        "Mentions grilled brief",
+        "Mentions locked design decisions",
+        "Mentions acceptance criteria",
+        "Mentions symphony and repo:<key> labels",
+        "Does not leave placeholder sections as final output guidance"
+      ]
+    },
+    {
+      "id": "negative-non-symphony-task",
+      "name": "Unrelated task should not force Symphony workflow",
+      "prompt": "List all open GitHub PRs that requested my review today.",
+      "expected_output": "Routes to GitHub CLI workflow and does not force Linear/Symphony ticketing commands for a pure PR-review request.",
+      "assertions": [
+        "Mentions gh or GitHub PR listing",
+        "Does not require symphony ticket create",
+        "Does not require Linear labels for this query"
+      ]
+    }
+  ]
+}

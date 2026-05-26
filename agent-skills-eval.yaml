@@ -7,8 +7,13 @@ judge: gpt-4o-mini
 baseUrl: https://api.openai.com/v1
 apiKeyEnv: OPENAI_API_KEY
 include:
-  - "auth-module"
+  - "auth"
+  - "bluebubbles-cli"
+  - "cost-investigation"
+  - "grafana-investigation"
+  - "infrastructure-investigation"
   - "notifications"
+  - "symphony"
 concurrency: 2
 layout: iteration
 strict: true

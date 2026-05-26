@@ -1,0 +1,44 @@
+{
+  "skill_name": "bluebubbles-cli",
+  "evals": [
+    {
+      "id": "private-api-layering",
+      "name": "Private API health is separate from server health",
+      "prompt": "BlueBubbles ping works, but enhanced iMessage features are broken and server info shows private_api true with helper_connected false. What should you say and check next?",
+      "expected_output": "Explains that normal server/API health is up but the Private API helper is disconnected, uses bluebubbles server info/logs and doctor, and says repair may require SIP/boot-arg work before re-checking helper_connected true.",
+      "assertions": [
+        "Mentions private_api",
+        "Mentions helper_connected false",
+        "Distinguishes normal server health from enhanced iMessage health",
+        "Mentions bluebubbles server info or doctor",
+        "Mentions SIP or boot args as possible repair path"
+      ]
+    },
+    {
+      "id": "cli-first-operations",
+      "name": "Use the BlueBubbles CLI first",
+      "prompt": "I need to inspect recent iMessage chats and maybe send a message. What workflow should the agent use?",
+      "expected_output": "Uses bluebubbles CLI help/config first, lists chat/message/handle commands, starts with read/list/get operations, uses JSON for scripts, and confirms GUIDs/addresses before sending.",
+      "assertions": [
+        "Mentions bluebubbles --help",
+        "Mentions chat or message commands",
+        "Mentions config sync or config set",
+        "Starts with read/list/get commands",
+        "Requires confirming GUIDs or addresses before sending"
+      ]
+    },
+    {
+      "id": "agent-runtime-host-checks",
+      "name": "Agent iMessage runtime host checks",
+      "prompt": "The agent iMessage runtime is flaky after moving machines. What local truth checks matter?",
+      "expected_output": "Checks whether this is the intended host/account, Messages process, BlueBubbles local status/logs, Tailscale reachability, SIP state, and preserves the separate account/home MacBook Air runtime model.",
+      "assertions": [
+        "Mentions who or account placement",
+        "Mentions pgrep -x Messages or Messages process",
+        "Mentions bluebubbles server local status or logs",
+        "Mentions Tailscale",
+        "Mentions separate macOS account or home MacBook Air"
+      ]
+    }
+  ]
+}

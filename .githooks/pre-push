@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+CHECK_SCRIPT="${REPO_ROOT}/scripts/pre-push-check.sh"
+
+if [[ "${SKIP_LOCAL_EVALS:-0}" == "1" ]]; then
+  echo "pre-push: SKIP_LOCAL_EVALS=1, skipping local skill checks."
+  exit 0
+fi
+
+if [[ ! -x "${CHECK_SCRIPT}" ]]; then
+  echo "pre-push: missing executable ${CHECK_SCRIPT}" >&2
+  exit 1
+fi
+
+exec "${CHECK_SCRIPT}"
