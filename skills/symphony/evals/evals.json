@@ -5,11 +5,12 @@
       "id": "create-ticket-with-required-labels",
       "name": "Create Symphony issue with required routing labels",
       "prompt": "Create a new Symphony ticket for create-svc to fix flaky Grafana provisioning.",
-      "expected_output": "Uses Symphony/Linear workflow and includes required dispatch labels (`symphony`, `repo:create-svc`) and triage state guidance (`needs-triage` then `ready-for-agent`).",
+      "expected_output": "Uses Symphony/Linear workflow and includes required dispatch labels (`symphony`, `repo:create-svc`), explicit `--state Todo` state guidance, and triage label guidance (`needs-triage` then `ready-for-agent`).",
       "assertions": [
         "Mentions label symphony",
         "Mentions label repo:create-svc",
         "Mentions needs-triage or ready-for-agent",
+        "Mentions Todo state for dispatch",
         "Mentions Linear issue creation via linear CLI or symphony ticket create",
         "Does not claim Symphony creates tickets by itself while polling"
       ]
@@ -18,13 +19,14 @@
       "id": "triage-to-ready-for-agent",
       "name": "Triage flow requires label transition",
       "prompt": "I finished triage for ANM-123. What exact label/state changes should I make so Symphony picks it up?",
-      "expected_output": "Explains dispatch requirements and explicitly instructs removing `needs-triage`, adding `ready-for-agent`, and preserving `symphony` + `repo:<key>` labels in active workflow states.",
+      "expected_output": "Explains dispatch requirements and explicitly instructs removing `needs-triage`, adding `ready-for-agent`, preserving `symphony` + `repo:<key>` labels, and setting an active state such as `Todo` because `Backlog` is not dispatchable.",
       "assertions": [
         "Mentions remove needs-triage",
         "Mentions add ready-for-agent",
         "Mentions keep symphony label",
         "Mentions repo:<key> routing label",
-        "Mentions active/non-terminal state requirement"
+        "Mentions active/non-terminal state requirement",
+        "Mentions Backlog is not dispatchable"
       ]
     },
     {
@@ -44,12 +46,13 @@
       "id": "grilled-brief-shape",
       "name": "Grilled brief mode references locked-design template",
       "prompt": "We already grilled this plan. How should I file it so AFK agents don't reinterpret the design?",
-      "expected_output": "Uses grilled brief workflow, references the grilled template/body shape (context, locked decisions, acceptance criteria), and keeps required labels for dispatch.",
+      "expected_output": "Uses grilled brief workflow, references the grilled template/body shape (context, locked decisions, acceptance criteria), and keeps required labels plus explicit `Todo` state for dispatch.",
       "assertions": [
         "Mentions grilled brief",
         "Mentions locked design decisions",
         "Mentions acceptance criteria",
         "Mentions symphony and repo:<key> labels",
+        "Mentions Todo state for dispatch",
         "Does not leave placeholder sections as final output guidance"
       ]
     },
