@@ -27,18 +27,24 @@ An issue is picked up only when **all** of the following hold:
 
 `repo:<key>` is **never** baked into Linear templates — always add it per issue.
 
+For dispatch-ready tickets, set the active state explicitly (`--state Todo` with
+the Linear CLI). Linear workspace defaults may create `Backlog` issues, and
+`Backlog` is not dispatchable even when `symphony`, `repo:<key>`, and
+`ready-for-agent` labels are correct.
+
 Read current routes from `WORKFLOW.md` before creating tickets.
 
 ## Create issues
 
 ### Preferred: Linear CLI (ANM default template)
 
-**Symphony agent brief** is the ANM team default. New issues get the standard body plus labels `symphony` and `needs-triage`. Add only the repo route:
+**Symphony agent brief** is the ANM team default. New issues get the standard body plus labels `symphony` and `needs-triage`. Add the repo route and explicit active state:
 
 ```bash
 linear issue create \
   --team ANM \
   --title "<repo-key>: short imperative title" \
+  --state Todo \
   --label repo:create-svc
 ```
 
@@ -55,6 +61,7 @@ linear issue create \
   --team ANM \
   --title "<repo-key>: short imperative title" \
   --description-file templates/linear-symphony-grilled-issue.md \
+  --state Todo \
   --label symphony \
   --label needs-triage \
   --label repo:create-svc \
@@ -62,6 +69,8 @@ linear issue create \
 ```
 
 Use grilled format after `/grill-me` or triage has locked decisions.
+For immediate ready-for-agent dispatch, swap `needs-triage` for
+`ready-for-agent` and keep `--state Todo`.
 
 ### Symphony CLI (programmatic)
 
@@ -161,6 +170,7 @@ Stop early and comment blockers for human-only console work, missing secrets, or
 - [ ] Label repo:<key> present and key exists in WORKFLOW.md repo_routes
 - [ ] Label symphony present
 - [ ] needs-triage removed; ready-for-agent applied
+- [ ] Active state is Todo or In Progress; Backlog will not dispatch even with ready-for-agent
 - [ ] Body complete (standard or grilled template)
 - [ ] Acceptance criteria are verifiable
 - [ ] Out of scope / references filled (grilled) or N/A sections removed (standard)
