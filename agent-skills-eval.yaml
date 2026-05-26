@@ -9,6 +9,7 @@ apiKeyEnv: OPENAI_API_KEY
 include:
   - "auth"
   - "bluebubbles-cli"
+  - "cost-investigation"
   - "grafana-investigation"
   - "notifications"
 concurrency: 2

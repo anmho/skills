@@ -12,6 +12,7 @@ Example:
 
 ```bash
 npx skills add anmho/skills --skill bluebubbles-cli --global -y
+npx skills add anmho/skills --skill cost-investigation --global -y
 npx skills add anmho/skills --skill grafana-investigation --global -y
 npx skills add anmho/skills --skill auth --global -y
 npx skills add anmho/skills --skill graphite --global -y
@@ -29,6 +30,7 @@ Use the local helper script to list available skills or install one:
 ```bash
 scripts/skills.sh list
 scripts/skills.sh install bluebubbles-cli
+scripts/skills.sh install cost-investigation
 scripts/skills.sh install grafana-investigation
 scripts/skills.sh install auth
 scripts/skills.sh install notifications
