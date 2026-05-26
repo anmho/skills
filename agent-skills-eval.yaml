@@ -10,6 +10,7 @@ include:
   - "auth"
   - "bluebubbles-cli"
   - "grafana-investigation"
+  - "notifications"
 concurrency: 2
 layout: iteration
 strict: true
