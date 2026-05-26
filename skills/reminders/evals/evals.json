@@ -1,0 +1,109 @@
+{
+  "skill_name": "reminders",
+  "evals": [
+    {
+      "id": "create-dated-reminder",
+      "name": "Create a dated reminder",
+      "prompt": "Remind me tomorrow to call Mom.",
+      "expected_output": "Uses the reminders skill and Google Tasks via gws, resolves tomorrow in the user's timezone, creates a task titled Call Mom with a due date, and confirms the concrete date without claiming a push notification.",
+      "assertions": [
+        "Uses Google Tasks or gws tasks",
+        "Creates a task or reminder titled Call Mom",
+        "Resolves tomorrow to a concrete due date",
+        "Does not ask for clarification when tomorrow is enough",
+        "Does not promise a device notification"
+      ]
+    },
+    {
+      "id": "create-undated-task",
+      "name": "Create an undated task",
+      "prompt": "Add a task to renew my passport.",
+      "expected_output": "Creates an undated Google Task for renewing the passport because this is a task request, not a dated reminder, and confirms it was added.",
+      "assertions": [
+        "Uses Google Tasks or gws tasks",
+        "Creates a task titled renew my passport",
+        "Treats missing due date as acceptable for a plain task",
+        "Does not ask for a date",
+        "Does not route to durable memory"
+      ]
+    },
+    {
+      "id": "list-todays-reminders",
+      "name": "List reminders due today",
+      "prompt": "What reminders do I have today?",
+      "expected_output": "Lists active Google Tasks due today by using dueMin/dueMax or client-side due-date filtering, excludes completed and deleted tasks unless asked, and summarizes titles with due dates.",
+      "assertions": [
+        "Uses Google Tasks or gws tasks",
+        "Filters for today's due date",
+        "Excludes completed tasks by default",
+        "Mentions dueMin/dueMax or filtering by due",
+        "Returns a concise list"
+      ]
+    },
+    {
+      "id": "complete-reminder",
+      "name": "Mark a reminder complete",
+      "prompt": "Mark the grocery reminder done.",
+      "expected_output": "Finds the matching active grocery reminder, asks a concise clarification question if multiple tasks match, patches status to completed, and confirms completion without deleting it.",
+      "assertions": [
+        "Searches or lists tasks before updating",
+        "Matches the grocery reminder",
+        "Patches status to completed",
+        "Does not delete the task",
+        "Asks for clarification if multiple matches exist"
+      ]
+    },
+    {
+      "id": "update-reminder-due-date",
+      "name": "Update a reminder due date",
+      "prompt": "Move the passport renewal task to next Friday.",
+      "expected_output": "Finds the existing passport renewal task, resolves next Friday in the user's timezone, patches only the due date, and confirms the concrete new date.",
+      "assertions": [
+        "Finds an existing task before patching",
+        "Resolves next Friday to a concrete date",
+        "Patches the due field",
+        "Keeps unrelated fields unchanged",
+        "Confirms the updated date"
+      ]
+    },
+    {
+      "id": "recurrence-limitation",
+      "name": "Handle recurring reminder limitation",
+      "prompt": "Remind me every Monday to take out the trash.",
+      "expected_output": "Explains that the selected Google Tasks backend cannot create recurrence through the API, then asks whether to create only the next Monday occurrence or another non-recurring task.",
+      "assertions": [
+        "Mentions recurrence or recurring reminders",
+        "Says Google Tasks API backend cannot create recurrence",
+        "Does not silently create an infinite repeating reminder",
+        "Offers to create the next occurrence only",
+        "Asks one concise follow-up question"
+      ]
+    },
+    {
+      "id": "missing-date-clarification",
+      "name": "Ask for missing reminder date",
+      "prompt": "Remind me to call the dentist.",
+      "expected_output": "Recognizes this as a reminder request but does not create it yet because no date or time is provided, and asks one concise clarification question such as When should I remind you?",
+      "assertions": [
+        "Recognizes a reminder request",
+        "Does not create a task yet",
+        "Asks for the missing date or time",
+        "Uses one concise clarification question",
+        "Does not route to durable memory"
+      ]
+    },
+    {
+      "id": "memory-vs-reminder-routing",
+      "name": "Do not treat durable preference memory as a reminder",
+      "prompt": "Remember this preference: I like brief status updates.",
+      "expected_output": "Routes this to durable conversational memory or preference handling, not Google Tasks, because there is no follow-up task or due date.",
+      "assertions": [
+        "Does not use Google Tasks",
+        "Does not create a reminder",
+        "Identifies this as a durable preference",
+        "Mentions memory or preference handling",
+        "Does not ask for a reminder date"
+      ]
+    }
+  ]
+}
