@@ -1,0 +1,44 @@
+{
+  "skill_name": "grafana-investigation",
+  "evals": [
+    {
+      "id": "loki-label-discovery",
+      "name": "Loki investigation starts with labels",
+      "prompt": "Grafana logs are needed for an auth-api production error around 10:15 PT. How should you investigate?",
+      "expected_output": "Uses Grafana/Loki, converts or states the concrete time window, discovers datasources and labels before assuming label names, searches for auth-api errors and structured auth events, and separates live telemetry from repo tests.",
+      "assertions": [
+        "Mentions Grafana or Loki",
+        "Mentions concrete timestamps or timezone handling",
+        "Says to discover labels before assuming service labels",
+        "Mentions auth_api.request or auth_api.internal_mutation",
+        "Distinguishes live telemetry from local repo checks"
+      ]
+    },
+    {
+      "id": "cloudflare-access-ray",
+      "name": "Cloudflare Access ray id triage",
+      "prompt": "authctl returns a Cloudflare 401 JSON body with aud and ray_id. What should the investigation do?",
+      "expected_output": "Searches for the ray id in logs, explains that no app log plus Cloudflare Access JSON points to a pre-app Access failure, runs authctl doctor --json, and checks Vault-backed Access credentials without printing secrets.",
+      "assertions": [
+        "Mentions searching logs for ray_id",
+        "States this can be a pre-app Cloudflare Access failure",
+        "Mentions authctl doctor --json",
+        "Mentions Vault or Access service-token credentials",
+        "Says not to print secrets"
+      ]
+    },
+    {
+      "id": "prometheus-metadata-first",
+      "name": "Prometheus metric discovery",
+      "prompt": "A generated service is slow in production. What Prometheus process should you follow?",
+      "expected_output": "Lists Prometheus datasource and metric metadata first, then checks availability, error rate, latency, saturation, and compares a bad window to a known-good window instead of inventing metric names.",
+      "assertions": [
+        "Mentions Prometheus or PromQL",
+        "Mentions metric metadata discovery",
+        "Mentions availability or up",
+        "Mentions error rate and latency",
+        "Warns not to invent metric names"
+      ]
+    }
+  ]
+}
