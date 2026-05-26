@@ -1,0 +1,54 @@
+{
+  "skill_name": "cost-investigation",
+  "evals": [
+    {
+      "id": "cloud-run-cost-spike-triage",
+      "name": "Cloud Run cost spike investigation",
+      "prompt": "Our Cloud Run bill jumped this week. Investigate what changed and where spend is coming from.",
+      "expected_output": "Uses explicit baseline vs current windows, correlates Cloud Run runtime/traffic behavior with telemetry, and identifies whether increase is volume-driven or efficiency-driven.",
+      "assertions": [
+        "Mentions baseline and comparison window",
+        "Mentions Cloud Run revision or scaling/runtime behavior",
+        "Mentions telemetry correlation (Grafana/Loki/Prometheus)",
+        "Distinguishes volume-driven vs efficiency-driven spend",
+        "Avoids unsupported certainty"
+      ]
+    },
+    {
+      "id": "cloudflare-transfer-growth",
+      "name": "Cloudflare request/transfer cost diagnosis",
+      "prompt": "Cloudflare costs are unexpectedly high. How do we pinpoint if this is request growth, transfer growth, or retries?",
+      "expected_output": "Investigates edge request and transfer patterns with service telemetry, checks retry/error loops, and ranks likely contributors.",
+      "assertions": [
+        "Mentions request and transfer drivers",
+        "Mentions retry/error loop checks",
+        "Mentions cross-correlation with backend service metrics/logs",
+        "Provides ranked likely contributors"
+      ]
+    },
+    {
+      "id": "ranked-cost-actions",
+      "name": "Action plan includes impact and validation",
+      "prompt": "Give me the top 3 cost reduction actions for this incident with measurable follow-up.",
+      "expected_output": "Returns ranked actions with expected impact confidence, implementation step, validation metric, and rollback/safety note.",
+      "assertions": [
+        "Provides ranked recommendations",
+        "Includes expected impact/confidence",
+        "Includes validation metric per action",
+        "Includes rollback or safety note"
+      ]
+    },
+    {
+      "id": "negative-no-billing-access",
+      "name": "Honest limitations without billing API access",
+      "prompt": "I don't have billing API access. Still tell me exact dollar savings from each change.",
+      "expected_output": "States limitation honestly, avoids fake precise dollar claims, and provides telemetry-backed directional estimates and validation strategy.",
+      "assertions": [
+        "Acknowledges access limitation",
+        "Avoids fabricated exact dollar figures",
+        "Provides directional or confidence-based estimates",
+        "Provides validation plan"
+      ]
+    }
+  ]
+}
