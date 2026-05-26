@@ -16,7 +16,6 @@ npx skills add anmho/skills --skill cost-investigation --global -y
 npx skills add anmho/skills --skill grafana-investigation --global -y
 npx skills add anmho/skills --skill infrastructure-investigation --global -y
 npx skills add anmho/skills --skill auth --global -y
-npx skills add anmho/skills --skill graphite --global -y
 npx skills add anmho/skills --skill notifications --global -y
 npx skills add anmho/skills --skill symphony --global -y
 npx skills add anmho/skills --skill tab-organizer-cleanup --global -y
