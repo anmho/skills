@@ -10,6 +10,7 @@ include:
   - "auth"
   - "bluebubbles-cli"
   - "cost-investigation"
+  - "google-workspace-gws"
   - "grafana-investigation"
   - "infrastructure-investigation"
   - "notifications"
