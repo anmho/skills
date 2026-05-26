@@ -11,6 +11,7 @@ include:
   - "bluebubbles-cli"
   - "cost-investigation"
   - "grafana-investigation"
+  - "hermes"
   - "infrastructure-investigation"
   - "notifications"
   - "symphony"
