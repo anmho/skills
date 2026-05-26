@@ -13,6 +13,7 @@ include:
   - "grafana-investigation"
   - "infrastructure-investigation"
   - "notifications"
+  - "reminders"
   - "symphony"
 concurrency: 2
 layout: iteration
