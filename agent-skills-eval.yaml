@@ -11,6 +11,7 @@ include:
   - "bluebubbles-cli"
   - "cost-investigation"
   - "grafana-investigation"
+  - "infrastructure-investigation"
   - "notifications"
 concurrency: 2
 layout: iteration
