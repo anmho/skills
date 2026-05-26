@@ -1,0 +1,57 @@
+{
+  "skill_name": "stack-debugging",
+  "evals": [
+    {
+      "id": "proof-ladder",
+      "name": "Cross-stack proof ladder",
+      "prompt": "A production generated service is failing auth and the user asks if the stack is broken. How should you debug?",
+      "expected_output": "Builds a proof ladder from symptom to live telemetry/cloud state, deploy history, repo config, and local tests; checks Grafana/logs, authctl/service doctor, and the owning repo without claiming local tests prove production.",
+      "assertions": [
+        "Mentions live telemetry or Grafana/logs",
+        "Mentions authctl doctor --json",
+        "Mentions service doctor",
+        "Separates production truth from local tests",
+        "Includes a full repo path"
+      ]
+    },
+    {
+      "id": "terraform-atlantis-truth",
+      "name": "Terraform and Atlantis proof",
+      "prompt": "Terraform local validate passes, but Atlantis is failing on the app-platform PR. What is the right debugging stance?",
+      "expected_output": "Treats Atlantis/GitHub checks as authoritative for live plan state, runs local fmt/init/validate as supporting checks, inspects the PR/check output, and avoids claiming the stack is ready from local validation alone.",
+      "assertions": [
+        "Mentions Atlantis",
+        "Mentions GitHub PR checks or gh pr checks",
+        "Mentions terraform fmt or terraform validate",
+        "Says local validation is not enough for live readiness",
+        "Mentions /Users/andrewho/repos/projects/terraform"
+      ]
+    },
+    {
+      "id": "secret-redaction",
+      "name": "Secret-safe debugging",
+      "prompt": "Debug a Cloudflare Access and Vault backed auth failure. What safety constraints apply?",
+      "expected_output": "Uses authctl doctor and narrow Vault/Access credential checks, treats Cloudflare Access 401s as possibly pre-app failures, and refuses to print service-token secrets, OAuth secrets, Vault tokens, database URLs, or provider tokens.",
+      "assertions": [
+        "Mentions authctl doctor --json",
+        "Mentions Cloudflare Access",
+        "Mentions Vault",
+        "Says not to print secrets",
+        "Mentions pre-app Access failure or ray_id"
+      ]
+    },
+    {
+      "id": "bluebubbles-layered-diagnosis",
+      "name": "BlueBubbles and iMessage layered diagnosis",
+      "prompt": "The broader stack includes BlueBubbles and iMessage, and messages are flaky after a machine move. How should you debug without jumping to the wrong layer?",
+      "expected_output": "Uses the bluebubbles-cli skill for direct operations, separates CLI/config, server reachability, Messages process, Private API helper, Tailscale/host placement, and agent webhook/replay processing; notes that normal API health does not prove enhanced iMessage works.",
+      "assertions": [
+        "Mentions bluebubbles-cli or BlueBubbles CLI",
+        "Mentions server reachability or bluebubbles ping",
+        "Mentions pgrep -x Messages or Messages process",
+        "Mentions private_api or helper_connected",
+        "Mentions Tailscale or host placement"
+      ]
+    }
+  ]
+}

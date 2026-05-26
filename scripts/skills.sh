@@ -58,7 +58,7 @@ main() {
       ;;
     install)
       shift || true
-      install_skill "${1:-}" "${2:-}"
+      install_skill "$@"
       ;;
     help|-h|--help)
       usage

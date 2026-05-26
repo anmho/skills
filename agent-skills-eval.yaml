@@ -14,6 +14,7 @@ include:
   - "grafana-investigation"
   - "infrastructure-investigation"
   - "notifications"
+  - "stack-debugging"
   - "symphony"
 concurrency: 2
 layout: iteration
