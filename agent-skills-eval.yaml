@@ -11,6 +11,7 @@ include:
   - "bluebubbles-cli"
   - "grafana-investigation"
   - "notifications"
+  - "symphony"
 concurrency: 2
 layout: iteration
 strict: true
