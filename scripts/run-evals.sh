@@ -14,10 +14,13 @@ EVAL_RUNNER_PATH="${EVAL_RUNNER_PATH:-${HOME}/repos/projects/agent-skills-eval}"
 # Provider can be overridden per-run without editing the YAML.
 # Examples:
 #   EVAL_PROVIDER=deepseek ./scripts/run-evals.sh
+#     (loads DEEPSEEK_API_KEY from Vault when unset — same path as `deepseek-api-key` alias)
 #   EVAL_PROVIDER=openai   ./scripts/run-evals.sh
 #   EVAL_TARGET=claude-3-5-sonnet-20241022 EVAL_BASE_URL=https://api.anthropic.com/v1 \
 #     EVAL_API_KEY_ENV=ANTHROPIC_API_KEY ./scripts/run-evals.sh
 EVAL_PROVIDER="${EVAL_PROVIDER:-}"
+# Set EVAL_BASELINE=0 to grade with_skill only (faster; avoids without_skill flakes).
+EVAL_BASELINE="${EVAL_BASELINE:-}"
 
 case "${EVAL_PROVIDER}" in
   deepseek)
@@ -46,8 +49,32 @@ esac
 API_KEY_ENV="${EVAL_API_KEY_ENV:-$(awk -F'[: ]+' '/^apiKeyEnv:/ {print $2; exit}' "${CONFIG}" 2>/dev/null || true)}"
 API_KEY_ENV="${API_KEY_ENV:-OPENAI_API_KEY}"
 
+load_eval_api_key_from_vault() {
+  local env_name="$1"
+  if [[ -n "${!env_name:-}" ]]; then
+    return 0
+  fi
+  if ! command -v vault >/dev/null 2>&1; then
+    return 1
+  fi
+  case "${env_name}" in
+    DEEPSEEK_API_KEY)
+      local key
+      key="$(vault kv get -mount=secret -field=deepseek.api_key prod/providers/deepseek 2>/dev/null)" || return 1
+      export DEEPSEEK_API_KEY="${key}"
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+load_eval_api_key_from_vault "${API_KEY_ENV}" || true
+
 if [[ -z "${!API_KEY_ENV:-}" ]]; then
-  echo "run-evals: ${API_KEY_ENV} is required (set it or override with EVAL_API_KEY_ENV)" >&2
+  echo "run-evals: ${API_KEY_ENV} is required." >&2
+  echo "  export ${API_KEY_ENV}=\"\$(deepseek-api-key)\"   # zsh alias → Vault" >&2
+  echo "  or: vault login && EVAL_PROVIDER=deepseek ./scripts/run-evals.sh" >&2
   exit 1
 fi
 
@@ -62,23 +89,21 @@ overrides=()
 [[ -n "${EVAL_BASE_URL:-}" ]]    && overrides+=(--base-url     "${EVAL_BASE_URL}")
 [[ -n "${EVAL_API_KEY_ENV:-}" ]] && overrides+=(--api-key-env  "${EVAL_API_KEY_ENV}")
 
+cli_args=(--config "${CONFIG}" --log-format jsonl "${overrides[@]}" "$@")
+if [[ "${EVAL_BASELINE}" == "0" ]]; then
+  cli_args=(--config "${CONFIG}" --log-format jsonl "${overrides[@]}" "$@")
+  # agent-skills-eval reads baseline from YAML; override via ephemeral config.
+  tmp_config="$(mktemp)"
+  trap 'rm -f "${tmp_config}"' EXIT
+  awk 'BEGIN{b=0} /^baseline:/{print "baseline: false"; b=1; next} {print} END{if(!b) print "baseline: false"}' "${CONFIG}" > "${tmp_config}"
+  cli_args=(--config "${tmp_config}" --log-format jsonl "${overrides[@]}" "$@")
+fi
+
 if [[ -x "${EVAL_RUNNER_PATH}/dist/cli.js" ]]; then
-  exec node "${EVAL_RUNNER_PATH}/dist/cli.js" \
-    --config "${CONFIG}" \
-    --log-format jsonl \
-    "${overrides[@]}" \
-    "$@"
+  exec node "${EVAL_RUNNER_PATH}/dist/cli.js" "${cli_args[@]}"
 elif [[ -f "${EVAL_RUNNER_PATH}/dist/cli.js" ]]; then
-  exec node "${EVAL_RUNNER_PATH}/dist/cli.js" \
-    --config "${CONFIG}" \
-    --log-format jsonl \
-    "${overrides[@]}" \
-    "$@"
+  exec node "${EVAL_RUNNER_PATH}/dist/cli.js" "${cli_args[@]}"
 else
   echo "run-evals: local fork not built at ${EVAL_RUNNER_PATH}/dist/cli.js; falling back to npm" >&2
-  exec npx --yes "agent-skills-eval@${EVAL_VERSION}" \
-    --config "${CONFIG}" \
-    --log-format jsonl \
-    "${overrides[@]}" \
-    "$@"
+  exec npx --yes "agent-skills-eval@${EVAL_VERSION}" "${cli_args[@]}"
 fi
