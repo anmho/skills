@@ -22,6 +22,14 @@
       {
         "type": "function",
         "function": {
+          "name": "bluebubbles_findmy_friends_list",
+          "description": "List Find My friends visible to the BlueBubbles server's Apple ID.",
+          "parameters": { "type": "object", "additionalProperties": false, "properties": {} }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
           "name": "bluebubbles_send_message",
           "description": "Send an iMessage via BlueBubbles. Use ONLY when the user explicitly asks to send something.",
           "parameters": {
@@ -73,6 +81,9 @@
           { "ts": "2026-05-23T23:55:00-07:00", "sender": "alex",  "text": "That set was insane" }
         ]
       },
+      "bluebubbles_findmy_friends_list": {
+        "friends": [{ "name": "Alex", "latitude": 37.7749, "longitude": -122.4194, "address": "San Francisco, CA" }]
+      },
       "gmail_search_threads": {
         "threads": [
           {
@@ -106,23 +117,6 @@
       ]
     },
     {
-      "id": "email-question-in-imessage-routes-to-gmail",
-      "name": "Email question over iMessage routes to Gmail with summary + link",
-      "prompt": "In a BlueBubbles/iMessage chat, the user asks: where's the iconfit confirmation email",
-      "assertions": [
-        "User-facing reply contains a mail.google.com URL",
-        "Reply contains a one-line summary mentioning iconfit",
-        "Reply does NOT paste the email body",
-        "Reply does NOT ask 'do you want the link?'",
-        "Reply is short — at most 3 lines"
-      ],
-      "tool_assertions": [
-        { "type": "tool-called",       "name": "gmail_search_threads" },
-        { "type": "tool-arg-contains", "name": "gmail_search_threads", "path": "query", "value": "iconfit" },
-        { "type": "tool-not-called",   "name": "bluebubbles_search_messages" }
-      ]
-    },
-    {
       "id": "imessage-messages-means-imessage-not-gmail",
       "name": "Plain 'messages' in a BlueBubbles chat means iMessage, not email",
       "prompt": "In a BlueBubbles/iMessage chat, the user asks: Can you search through my messages? Where did I go on Saturday? Today is 2026-05-27 in America/Los_Angeles.",
@@ -137,16 +131,47 @@
       ]
     },
     {
+      "id": "findmy-location-read-only",
+      "name": "Location question uses Find My read path, does not send iMessage",
+      "prompt": "In a BlueBubbles/iMessage chat, the user asks: Do you have my location?",
+      "assertions": [
+        "User-facing reply answers whether location is available in plain language",
+        "Reply is short — at most 3 lines",
+        "Reply does NOT claim to add or share someone's location without permission"
+      ],
+      "tool_assertions": [
+        { "type": "tool-called",     "name": "bluebubbles_findmy_friends_list" },
+        { "type": "tool-not-called", "name": "bluebubbles_send_message" }
+      ]
+    },
+    {
       "id": "no-unsolicited-send",
-      "name": "Agent does not send a message when the user only asked a question",
+      "name": "Agent does not send iMessage when the user only asked a question",
       "prompt": "In an iMessage chat, the user asks: did Alex confirm Saturday?",
       "assertions": [
         "User-facing reply answers the question",
-        "Reply does NOT contain a follow-up nudge like 'Want me to text Alex?' unless the user asked"
+        "Reply does NOT lead with a tool-use preamble"
       ],
       "tool_assertions": [
         { "type": "tool-called",     "name": "bluebubbles_search_messages" },
         { "type": "tool-not-called", "name": "bluebubbles_send_message" }
+      ]
+    },
+    {
+      "id": "email-question-in-imessage-routes-to-gmail",
+      "name": "Email question over iMessage routes to Gmail (cross-skill regression)",
+      "prompt": "In a BlueBubbles/iMessage chat, the user asks: where's the iconfit confirmation email",
+      "assertions": [
+        "User-facing reply contains a mail.google.com URL",
+        "Reply contains a one-line summary mentioning iconfit or the order",
+        "Reply does NOT paste the email body",
+        "Reply does NOT ask 'do you want the link?'",
+        "Reply is short — at most 3 lines"
+      ],
+      "tool_assertions": [
+        { "type": "tool-called",       "name": "gmail_search_threads" },
+        { "type": "tool-arg-contains", "name": "gmail_search_threads", "path": "query", "value": "iconfit" },
+        { "type": "tool-not-called",   "name": "bluebubbles_search_messages" }
       ]
     }
   ]
