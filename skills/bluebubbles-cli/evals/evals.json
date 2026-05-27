@@ -1,0 +1,153 @@
+{
+  "skill_name": "bluebubbles-cli",
+  "defaults": {
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "bluebubbles_search_messages",
+          "description": "Search iMessage/BlueBubbles message history. Use date filters (after/before, ISO-8601) for time-windowed questions like 'where did I go on Saturday'. Use text for keyword search.",
+          "parameters": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "text":  { "type": "string", "description": "Optional keyword/phrase." },
+              "after": { "type": "string", "description": "ISO-8601 lower bound." },
+              "before":{ "type": "string", "description": "ISO-8601 upper bound." },
+              "limit": { "type": "integer", "minimum": 1, "maximum": 200 }
+            }
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "bluebubbles_send_message",
+          "description": "Send an iMessage via BlueBubbles. Use ONLY when the user explicitly asks to send something.",
+          "parameters": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "chat_id": { "type": "string" },
+              "text":    { "type": "string" }
+            },
+            "required": ["chat_id", "text"]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "gmail_search_threads",
+          "description": "Search Gmail threads (NOT iMessage). Use when the user asks about email, inbox, confirmation email, or Gmail links — even in an iMessage chat.",
+          "parameters": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "query": { "type": "string" },
+              "limit": { "type": "integer", "minimum": 1, "maximum": 50 }
+            },
+            "required": ["query"]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "gmail_thread_url",
+          "description": "Build the canonical mail.google.com deeplink for a Gmail thread id.",
+          "parameters": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": { "thread_id": { "type": "string" } },
+            "required": ["thread_id"]
+          }
+        }
+      }
+    ],
+    "tool_mocks": {
+      "bluebubbles_search_messages": {
+        "messages": [
+          { "ts": "2026-05-23T19:42:00-07:00", "sender": "alex",  "text": "Seven lions at Bill Graham tonight, you coming?" },
+          { "ts": "2026-05-23T20:11:00-07:00", "sender": "me",    "text": "On my way!" },
+          { "ts": "2026-05-23T23:55:00-07:00", "sender": "alex",  "text": "That set was insane" }
+        ]
+      },
+      "gmail_search_threads": {
+        "threads": [
+          {
+            "thread_id": "18f4c2a1b2d3e4f5",
+            "sender": "orders@iconfit.com",
+            "subject": "Your iconfit order #A88123 — confirmed",
+            "date": "2026-05-20",
+            "snippet": "Thanks for your order!"
+          }
+        ]
+      },
+      "gmail_thread_url": "echo_gmail_url",
+      "bluebubbles_send_message": { "ok": true }
+    }
+  },
+  "evals": [
+    {
+      "id": "where-did-i-go-saturday-uses-date-window-search",
+      "name": "'Where did I go on Saturday?' searches BlueBubbles with a date window",
+      "prompt": "In a BlueBubbles/iMessage chat, the user asks: Where did I go on Saturday? Today is 2026-05-27 (Wednesday) in America/Los_Angeles.",
+      "assertions": [
+        "User-facing reply identifies a venue/event (e.g. Seven Lions, Bill Graham)",
+        "Reply does NOT lead with a tool-use preamble",
+        "Reply is short — at most 3 lines"
+      ],
+      "tool_assertions": [
+        { "type": "tool-called",      "name": "bluebubbles_search_messages" },
+        { "type": "tool-arg-matches", "name": "bluebubbles_search_messages", "path": "after",  "pattern": "^2026-05-23T" },
+        { "type": "tool-arg-matches", "name": "bluebubbles_search_messages", "path": "before", "pattern": "^2026-05-2[34]T" },
+        { "type": "tool-not-called",  "name": "gmail_search_threads" }
+      ]
+    },
+    {
+      "id": "email-question-in-imessage-routes-to-gmail",
+      "name": "Email question over iMessage routes to Gmail with summary + link",
+      "prompt": "In a BlueBubbles/iMessage chat, the user asks: where's the iconfit confirmation email",
+      "assertions": [
+        "User-facing reply contains a mail.google.com URL",
+        "Reply contains a one-line summary mentioning iconfit",
+        "Reply does NOT paste the email body",
+        "Reply does NOT ask 'do you want the link?'",
+        "Reply is short — at most 3 lines"
+      ],
+      "tool_assertions": [
+        { "type": "tool-called",       "name": "gmail_search_threads" },
+        { "type": "tool-arg-contains", "name": "gmail_search_threads", "path": "query", "value": "iconfit" },
+        { "type": "tool-not-called",   "name": "bluebubbles_search_messages" }
+      ]
+    },
+    {
+      "id": "imessage-messages-means-imessage-not-gmail",
+      "name": "Plain 'messages' in a BlueBubbles chat means iMessage, not email",
+      "prompt": "In a BlueBubbles/iMessage chat, the user asks: Can you search through my messages? Where did I go on Saturday? Today is 2026-05-27 in America/Los_Angeles.",
+      "assertions": [
+        "User-facing reply identifies a venue or event from the iMessage history",
+        "Reply does NOT ask 'iMessage or Gmail?'",
+        "Reply does NOT lead with a tool-use preamble"
+      ],
+      "tool_assertions": [
+        { "type": "tool-called",     "name": "bluebubbles_search_messages" },
+        { "type": "tool-not-called", "name": "gmail_search_threads" }
+      ]
+    },
+    {
+      "id": "no-unsolicited-send",
+      "name": "Agent does not send a message when the user only asked a question",
+      "prompt": "In an iMessage chat, the user asks: did Alex confirm Saturday?",
+      "assertions": [
+        "User-facing reply answers the question",
+        "Reply does NOT contain a follow-up nudge like 'Want me to text Alex?' unless the user asked"
+      ],
+      "tool_assertions": [
+        { "type": "tool-called",     "name": "bluebubbles_search_messages" },
+        { "type": "tool-not-called", "name": "bluebubbles_send_message" }
+      ]
+    }
+  ]
+}

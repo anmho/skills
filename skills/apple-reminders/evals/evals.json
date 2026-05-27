@@ -1,0 +1,208 @@
+{
+  "skill_name": "apple-reminders",
+  "defaults": {
+    "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "remindctl_add",
+        "description": "Create a new Apple Reminder via remindctl add.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "title": { "type": "string", "description": "Reminder title." },
+            "due":   { "type": "string", "description": "Due date/time as ISO-8601 with offset, e.g. 2026-05-28T15:00:00-07:00. Omit for undated reminders." },
+            "list":  { "type": "string", "description": "List name. Omit to use the default list." }
+          },
+          "required": ["title"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "remindctl_complete",
+        "description": "Mark a reminder complete (does not delete).",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "title_match": { "type": "string", "description": "Substring or exact title used to find the reminder." }
+          },
+          "required": ["title_match"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "remindctl_show",
+        "description": "Read reminders, optionally scoped to today or a specific list.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "scope": { "type": "string", "enum": ["today", "overdue", "all"], "description": "Filter scope." },
+            "list":  { "type": "string", "description": "Restrict to a specific list." }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "remindctl_status",
+        "description": "Check Reminders authorization status.",
+        "parameters": { "type": "object", "additionalProperties": false, "properties": {} }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "remindctl_authorize",
+        "description": "Trigger the macOS permission prompt for Reminders access.",
+        "parameters": { "type": "object", "additionalProperties": false, "properties": {} }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "agent_alert_schedule",
+        "description": "Schedule a short-horizon agent alert / cronjob (NOT an iOS-synced reminder). Use for sub-hour 'remind me' requests that the user expects the agent to act on, not their phone.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "message": { "type": "string" },
+            "fire_at": { "type": "string", "description": "ISO-8601 timestamp." }
+          },
+          "required": ["message", "fire_at"]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "calendar_create_event",
+        "description": "Create a calendar event (Apple Calendar / Google Calendar). Use for recurring meetings, scheduled blocks, and events with attendees — NOT for personal todos.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "title": { "type": "string" },
+            "start": { "type": "string" },
+            "rrule": { "type": "string", "description": "iCalendar RRULE if recurring." }
+          },
+          "required": ["title", "start"]
+        }
+      }
+    }
+    ],
+    "tool_mocks": {
+      "remindctl_add":      { "ok": true, "id": "rem-001" },
+      "remindctl_complete": { "ok": true, "completed": 1 },
+      "remindctl_show":     { "ok": true, "reminders": [
+        { "title": "Pay rent",    "due": "2026-05-27T17:00:00-07:00" },
+        { "title": "Buy milk",    "due": null },
+        { "title": "Call dentist", "due": "2026-05-27T10:00:00-07:00" }
+      ] },
+      "remindctl_status":     { "ok": true, "access": "full" },
+      "remindctl_authorize":  { "ok": true, "access": "full" },
+      "agent_alert_schedule": { "ok": true, "scheduled_id": "alert-001" },
+      "calendar_create_event": { "ok": true, "event_id": "evt-001" }
+    }
+  },
+  "evals": [
+    {
+      "id": "add-with-due-date-calls-remindctl-add",
+      "name": "Dated reminder triggers remindctl_add with concrete ISO due time",
+      "prompt": "Add a reminder to call mom tomorrow at 3pm. Today is 2026-05-27 and the user is in America/Los_Angeles.",
+      "assertions": [
+        "The user-facing output does NOT contain phrases like 'I will use', 'Let me use', 'Using remindctl', or any other announcement of tool use",
+        "The user-facing output is at most 2 short lines confirming the reminder was added",
+        "The reasoning trace (across all turns) shows the model chose the Apple-Reminders/remindctl tool family for this dated personal reminder"
+      ],
+      "tool_assertions": [
+        { "type": "tool-called",       "name": "remindctl_add" },
+        { "type": "tool-not-called",   "name": "calendar_create_event" },
+        { "type": "tool-not-called",   "name": "agent_alert_schedule" },
+        { "type": "tool-arg-contains", "name": "remindctl_add", "path": "title", "value": "mom" },
+        { "type": "tool-arg-matches",  "name": "remindctl_add", "path": "due",   "pattern": "^2026-05-28T15:00:00(-07:00|-08:00)$" }
+      ]
+    },
+    {
+      "id": "short-horizon-remind-me-picks-cronjob-not-reminder",
+      "name": "'In 5 minutes' picks agent_alert_schedule, not remindctl_add",
+      "prompt": "Remind me to check the deploy in 5 minutes. Current time is 2026-05-27T14:00:00-07:00.",
+      "assertions": [
+        "The reasoning trace (across all turns) shows the model recognised the sub-hour horizon and chose the agent-alert / cronjob path instead of an iOS Reminder",
+        "User-facing output is one short line confirming the alert",
+        "Output does NOT announce 'I will use the cronjob tool' or similar"
+      ],
+      "tool_assertions": [
+        { "type": "tool-called",     "name": "agent_alert_schedule" },
+        { "type": "tool-not-called", "name": "remindctl_add" },
+        { "type": "tool-arg-matches", "name": "agent_alert_schedule", "path": "fire_at", "pattern": "^2026-05-27T14:05:00-07:00$" }
+      ]
+    },
+    {
+      "id": "recurring-meeting-goes-to-calendar-not-reminders",
+      "name": "Weekly meeting routes to calendar_create_event",
+      "prompt": "Add a weekly team sync at 10am every Monday. Today is 2026-05-27 (Wednesday), timezone America/Los_Angeles.",
+      "assertions": [
+        "The reasoning trace (across all turns) shows the model routed the recurring meeting to a calendar tool, not Reminders",
+        "User-facing output is one short confirmation",
+        "Output does NOT mention the words 'remindctl' or 'Reminders app'"
+      ],
+      "tool_assertions": [
+        { "type": "tool-called",     "name": "calendar_create_event" },
+        { "type": "tool-not-called", "name": "remindctl_add" },
+        { "type": "tool-arg-contains", "name": "calendar_create_event", "path": "rrule", "value": "FREQ=WEEKLY" }
+      ]
+    },
+    {
+      "id": "todo-today-calls-remindctl-show",
+      "name": "'What's on my todo today?' reads from remindctl_show",
+      "prompt": "What's on my todo list today?",
+      "assertions": [
+        "User-facing output is a compact list or a one-line 'nothing for today' message",
+        "Output does NOT announce 'I will check' or 'Let me look up' before the list",
+        "The reasoning trace (across all turns) shows the model chose to read today's reminders, not add or modify anything"
+      ],
+      "tool_assertions": [
+        { "type": "tool-called",      "name": "remindctl_show" },
+        { "type": "tool-arg-equals",  "name": "remindctl_show", "path": "scope", "value": "today" },
+        { "type": "tool-not-called",  "name": "remindctl_add" }
+      ]
+    },
+    {
+      "id": "complete-calls-complete-not-delete",
+      "name": "Marking done uses remindctl_complete with the matched title",
+      "prompt": "Mark 'pay rent' as done.",
+      "assertions": [
+        "User-facing output is one short confirmation line",
+        "Output does NOT include a tool-use preamble"
+      ],
+      "tool_assertions": [
+        { "type": "tool-called",       "name": "remindctl_complete" },
+        { "type": "tool-arg-contains", "name": "remindctl_complete", "path": "title_match", "value": "pay rent" }
+      ]
+    },
+    {
+      "id": "unqualified-add-goes-to-default-list-no-clarifier",
+      "name": "Unqualified 'add a reminder' creates undated reminder without nagging",
+      "prompt": "Add a reminder to buy milk.",
+      "assertions": [
+        "User-facing output is one short confirmation, NOT a clarifying question",
+        "Output does NOT ask 'which list?' or 'when?'",
+        "Output does NOT include a tool-use preamble"
+      ],
+      "tool_assertions": [
+        { "type": "tool-called",       "name": "remindctl_add" },
+        { "type": "tool-arg-contains", "name": "remindctl_add", "path": "title", "value": "milk" },
+        { "type": "tool-call-count",   "name": "remindctl_add", "max": 1 }
+      ]
+    }
+  ]
+}

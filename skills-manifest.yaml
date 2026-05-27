@@ -1,0 +1,7 @@
+# Maps runner-local slug -> absolute source path of the canonical SKILL dir.
+# `scripts/sync-skills.sh` copies each source into ./skills/<slug> before evals run.
+# Skills NOT listed here are left untouched (i.e. real dirs already in ./skills/).
+external:
+  apple-reminders: ~/.hermes/skills/productivity/apple-reminders
+  gmail-threads:   ~/.hermes/skills/productivity/gmail-threads
+  bluebubbles-cli: ~/.hermes/skills/messaging/bluebubbles-cli

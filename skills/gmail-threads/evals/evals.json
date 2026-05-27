@@ -1,0 +1,140 @@
+{
+  "skill_name": "gmail-threads",
+  "defaults": {
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "gmail_search_threads",
+          "description": "Search Gmail threads. Returns the matching threads with id, snippet, sender, subject, date.",
+          "parameters": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "query": { "type": "string", "description": "Gmail search query (e.g. 'iconfit confirmation', 'from:support@example.com')." },
+              "limit": { "type": "integer", "minimum": 1, "maximum": 50 }
+            },
+            "required": ["query"]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "gmail_thread_url",
+          "description": "Build the canonical mail.google.com deeplink for a Gmail thread id.",
+          "parameters": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "thread_id": { "type": "string" },
+              "account_index": { "type": "integer", "description": "Gmail account index (default 0)." }
+            },
+            "required": ["thread_id"]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "gmail_read_thread",
+          "description": "Fetch the full body of a Gmail thread. ONLY use when the user explicitly asked for the email content or to quote/extract a fact from it. Do NOT use to answer 'send me the link' or 'where's the email' — those need only gmail_search_threads + gmail_thread_url.",
+          "parameters": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": { "thread_id": { "type": "string" } },
+            "required": ["thread_id"]
+          }
+        }
+      }
+    ],
+    "tool_mocks": {
+      "gmail_search_threads": {
+        "threads": [
+          {
+            "thread_id": "19e7abc123",
+            "sender": "support@hardjewelry.com",
+            "subject": "Return label for order #1121666",
+            "date": "2026-05-18",
+            "snippet": "Your prepaid return label is ready to print."
+          },
+          {
+            "thread_id": "18f4c2a1b2d3e4f5",
+            "sender": "orders@iconfit.com",
+            "subject": "Your iconfit order #A88123 — confirmed",
+            "date": "2026-05-20",
+            "snippet": "Thanks for your order! Estimated delivery May 26-28."
+          }
+        ]
+      },
+      "gmail_thread_url": "echo_gmail_url",
+      "gmail_read_thread": {
+        "thread_id": "18f4c2a1b2d3e4f5",
+        "body": "Full email body that the agent should NOT paste back into a short reply."
+      }
+    }
+  },
+  "evals": [
+    {
+      "id": "hard-jewelry-open-email-link-first",
+      "name": "Hard Jewelry email open request returns Gmail deeplink first",
+      "prompt": "Hard jewelry check my gmail. Open the email. Send me the link.",
+      "assertions": [
+        "User-facing reply contains a mail.google.com URL",
+        "Reply does NOT contain the full email body",
+        "Reply does NOT lead with a tool-use preamble like 'I'll search Gmail'",
+        "Reply is short — at most 3 lines"
+      ],
+      "tool_assertions": [
+        { "type": "tool-called",       "name": "gmail_search_threads" },
+        { "type": "tool-arg-contains", "name": "gmail_search_threads", "path": "query", "value": "jewelry" }
+      ]
+    },
+    {
+      "id": "imessage-email-question-link-first-turn",
+      "name": "iMessage email question returns summary + Gmail link on first turn",
+      "prompt": "In a BlueBubbles/iMessage chat, the user asks: where's the iconfit confirmation email",
+      "assertions": [
+        "User-facing reply contains a mail.google.com URL",
+        "Reply also contains a one-line summary mentioning iconfit or the order confirmation",
+        "Reply does NOT paste the full email body",
+        "Reply does NOT ask any clarifying question like 'do you want the link?'",
+        "Reply is short — at most 3 lines (summary line + link)"
+      ],
+      "tool_assertions": [
+        { "type": "tool-called",       "name": "gmail_search_threads" },
+        { "type": "tool-arg-contains", "name": "gmail_search_threads", "path": "query", "value": "iconfit" },
+        { "type": "tool-not-called",   "name": "gmail_read_thread" }
+      ]
+    },
+    {
+      "id": "send-me-link-uses-thread-id",
+      "name": "Follow-up 'send the link' builds URL from a known thread_id",
+      "prompt": "I just looked up an email with thread_id 18f4c2a1b2d3e4f5. Send me the link.",
+      "assertions": [
+        "User-facing reply contains a mail.google.com URL",
+        "Reply does NOT paste any email body",
+        "Reply is just a URL or a one-line message plus the URL"
+      ],
+      "tool_assertions": [
+        { "type": "tool-called",      "name": "gmail_thread_url" },
+        { "type": "tool-arg-equals",  "name": "gmail_thread_url", "path": "thread_id", "value": "18f4c2a1b2d3e4f5" },
+        { "type": "tool-not-called",  "name": "gmail_read_thread" },
+        { "type": "tool-not-called",  "name": "gmail_search_threads" }
+      ]
+    },
+    {
+      "id": "extract-fact-from-body-allows-read-thread",
+      "name": "When user asks for content, gmail_read_thread is the right tool",
+      "prompt": "Quote me the estimated delivery date from the iconfit confirmation email.",
+      "assertions": [
+        "User-facing reply contains the delivery date phrase from the email body",
+        "Reply does NOT lead with a tool-use preamble"
+      ],
+      "tool_assertions": [
+        { "type": "tool-called", "name": "gmail_search_threads" },
+        { "type": "tool-called", "name": "gmail_read_thread" }
+      ]
+    }
+  ]
+}
