@@ -1,5 +1,35 @@
 {
   "skill_name": "notifications",
+  "defaults": {
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "notifications_send_resend",
+          "description": "Send a Resend email using notifications skill defaults (Andy / agent@anmho.com). Use when the user explicitly asks to send or notify.",
+          "parameters": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "subject": { "type": "string" },
+              "body": { "type": "string" },
+              "to": { "type": "string", "description": "Optional override; default andyminhtuanho@gmail.com" },
+              "from": { "type": "string", "description": "Optional override; default Agent <agent@anmho.com>" }
+            },
+            "required": ["subject", "body"]
+          }
+        }
+      }
+    ],
+    "tool_mocks": {
+      "notifications_send_resend": {
+        "ok": true,
+        "channel": "resend",
+        "to": "andyminhtuanho@gmail.com",
+        "from": "Agent <agent@anmho.com>"
+      }
+    }
+  },
   "evals": [
     {
       "id": "completion-notice",
@@ -12,6 +42,11 @@
         "Includes workspace path, branch, PR, and checks in the notice",
         "Uses Resend for the email channel",
         "Does not ask for a recipient before proceeding"
+      ],
+      "tool_assertions": [
+        { "type": "tool-called", "name": "notifications_send_resend" },
+        { "type": "tool-arg-contains", "name": "notifications_send_resend", "path": "body", "value": "/Users/andrewho/repos/projects/auth" },
+        { "type": "tool-arg-contains", "name": "notifications_send_resend", "path": "body", "value": "codex/auth-fix" }
       ]
     },
     {
@@ -37,6 +72,9 @@
         "Produces a draft completion notification",
         "Includes completion-template fields like status, workspace, checks, blockers, and next action",
         "Mentions that a real send requires an explicit send/notify request"
+      ],
+      "tool_assertions": [
+        { "type": "tool-not-called", "name": "notifications_send_resend" }
       ]
     },
     {

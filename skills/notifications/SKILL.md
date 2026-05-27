@@ -54,7 +54,10 @@ Agent run <outcome>: <short task/repo>
 
 ## Sending with Resend
 
-Preferred helper:
+When a `notifications_send_resend` tool is available (eval harness / gateway), call it
+with `subject` and `body` instead of probing the filesystem or running ad-hoc bash.
+
+Preferred helper (real sends on a machine with Vault + Resend):
 
 ```bash
 skills/notifications/scripts/send-resend-email.sh \
