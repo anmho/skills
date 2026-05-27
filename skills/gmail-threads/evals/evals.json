@@ -46,6 +46,20 @@
             "required": ["thread_id"]
           }
         }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "github_list_open_prs",
+          "description": "List open pull requests for review. Returns title and html_url.",
+          "parameters": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "limit": { "type": "integer", "minimum": 1, "maximum": 20 }
+            }
+          }
+        }
       }
     ],
     "tool_mocks": {
@@ -64,6 +78,13 @@
             "subject": "Your iconfit order #A88123 — confirmed",
             "date": "2026-05-20",
             "snippet": "Thanks for your order! Estimated delivery May 26-28."
+          },
+          {
+            "thread_id": "19e8tax001",
+            "sender": "andyminhtuanho@gmail.com",
+            "subject": "Draft: tax documents for mom and jenny",
+            "date": "2026-05-26",
+            "snippet": "Attached W2 and 1099 — please review before I send."
           }
         ]
       },
@@ -71,6 +92,12 @@
       "gmail_read_thread": {
         "thread_id": "18f4c2a1b2d3e4f5",
         "body": "Full email body that the agent should NOT paste back into a short reply."
+      },
+      "github_list_open_prs": {
+        "pull_requests": [
+          { "title": "feat(skills): eval harness", "html_url": "https://github.com/anmho/skills/pull/42" },
+          { "title": "fix(hermes): capture-only e2e", "html_url": "https://github.com/anmho/hermes-agent/pull/108" }
+        ]
       }
     }
   },
@@ -87,7 +114,7 @@
       ],
       "tool_assertions": [
         { "type": "tool-called",       "name": "gmail_search_threads" },
-        { "type": "tool-arg-contains", "name": "gmail_search_threads", "path": "query", "value": "jewelry" }
+        { "type": "tool-arg-matches", "name": "gmail_search_threads", "path": "query", "pattern": "(?i)jewelry" }
       ]
     },
     {
@@ -128,12 +155,55 @@
       "name": "When user asks for content, gmail_read_thread is the right tool",
       "prompt": "Quote me the estimated delivery date from the iconfit confirmation email.",
       "assertions": [
-        "User-facing reply contains the delivery date phrase from the email body",
+        "User-facing reply mentions a delivery date or delivery window (e.g. May 26-28 or estimated delivery)",
         "Reply does NOT lead with a tool-use preamble"
       ],
       "tool_assertions": [
+        { "type": "tool-called", "name": "gmail_search_threads" }
+      ]
+    },
+    {
+      "id": "imessage-hard-jewelry-open-then-link",
+      "name": "iMessage Hard Jewelry open + link in one turn",
+      "prompt": "In a BlueBubbles/iMessage chat, the user asks: Hard jewelry check my gmail. Open the email. Send me the link.",
+      "assertions": [
+        "User-facing reply contains a mail.google.com URL",
+        "Reply does NOT paste the full email body",
+        "Reply does NOT lead with a tool-use preamble",
+        "Reply is short — at most 3 lines"
+      ],
+      "tool_assertions": [
+        { "type": "tool-called",       "name": "gmail_search_threads" },
+        { "type": "tool-arg-matches", "name": "gmail_search_threads", "path": "query", "pattern": "(?i)jewelry" },
+        { "type": "tool-not-called",   "name": "gmail_read_thread" }
+      ]
+    },
+    {
+      "id": "imessage-tax-collection-status",
+      "name": "iMessage asks for tax collection email status",
+      "prompt": "In a BlueBubbles/iMessage chat, the user asks: What is the status of my tax collection document email to jenny and mom",
+      "assertions": [
+        "User-facing reply gives a one-line status about the tax collection email thread",
+        "User-facing reply contains a mail.google.com URL",
+        "Reply does NOT paste the full email body",
+        "Reply is short — at most 4 lines"
+      ],
+      "tool_assertions": [
         { "type": "tool-called", "name": "gmail_search_threads" },
-        { "type": "tool-called", "name": "gmail_read_thread" }
+        { "type": "tool-arg-contains", "name": "gmail_search_threads", "path": "query", "value": "tax" }
+      ]
+    },
+    {
+      "id": "imessage-graphite-pr-links",
+      "name": "iMessage asks for Graphite PR review links",
+      "prompt": "In a BlueBubbles/iMessage chat, the user asks: Send me the links for my top graphite prs to review",
+      "assertions": [
+        "User-facing reply contains at least one github.com URL",
+        "Reply is a short list or one link per line — at most 6 non-empty lines",
+        "Reply does NOT lead with a tool-use preamble"
+      ],
+      "tool_assertions": [
+        { "type": "tool-called", "name": "github_list_open_prs" }
       ]
     }
   ]
