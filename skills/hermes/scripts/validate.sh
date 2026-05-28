@@ -14,11 +14,20 @@ fail() {
 [[ -f "${EVALS_JSON}" ]] || fail "missing evals/evals.json"
 
 command -v jq >/dev/null 2>&1 || fail "jq required"
+command -v rg >/dev/null 2>&1 || fail "rg required"
 
 name="$(awk '/^name: / { print $2; exit }' "${SKILL_MD}")"
 [[ "${name}" == "hermes" ]] || fail "SKILL.md name must be hermes (got: ${name:-empty})"
 
-for required in "web search" "browser access" "cite sources" "Search Only" "Browser Only" "Search Then Browser" "authenticated sessions" "Do not request"; do
+for required in \
+  "native web search and browser routing" \
+  "does not add a second web-access layer" \
+  "Search Only" \
+  "Browser Only" \
+  "Search Then Browser" \
+  "cite sources" \
+  "authenticated sessions" \
+  "Do not request"; do
   rg -n "${required}" "${SKILL_MD}" >/dev/null || fail "SKILL.md missing required text: ${required}"
 done
 
