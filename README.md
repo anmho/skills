@@ -14,7 +14,6 @@ Example:
 npx skills add anmho/skills --skill bluebubbles-cli --global -y
 npx skills add anmho/skills --skill cost-investigation --global -y
 npx skills add anmho/skills --skill grafana-investigation --global -y
-npx skills add anmho/skills --skill hermes --global -y
 npx skills add anmho/skills --skill infrastructure-investigation --global -y
 npx skills add anmho/skills --skill auth --global -y
 npx skills add anmho/skills --skill notifications --global -y
@@ -34,7 +33,6 @@ scripts/skills.sh list
 scripts/skills.sh install bluebubbles-cli
 scripts/skills.sh install cost-investigation
 scripts/skills.sh install grafana-investigation
-scripts/skills.sh install hermes
 scripts/skills.sh install infrastructure-investigation
 scripts/skills.sh install auth
 scripts/skills.sh install notifications
