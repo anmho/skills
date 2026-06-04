@@ -12,6 +12,7 @@ include:
   - "cost-investigation"
   - "google-workspace-gws"
   - "grafana-investigation"
+  - "hermes"
   - "infrastructure-investigation"
   - "notifications"
   - "stack-debugging"

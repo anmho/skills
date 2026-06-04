@@ -27,8 +27,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install jq
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq jq
+      - name: Install validation tools
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq jq ripgrep
 
       - name: Validate skills with evals
         run: scripts/validate-all-skills.sh
@@ -44,8 +44,8 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Install jq
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq jq
+      - name: Install validation tools
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq jq ripgrep
 
       - name: Check for OPENAI_API_KEY
         id: keycheck
