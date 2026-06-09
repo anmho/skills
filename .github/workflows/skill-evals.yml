@@ -27,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install validation dependencies
+      - name: Install validator dependencies
         run: sudo apt-get update -qq && sudo apt-get install -y -qq jq ripgrep
 
       - name: Validate skills with evals
@@ -44,7 +44,7 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Install eval dependencies
+      - name: Install evaluator dependencies
         run: sudo apt-get update -qq && sudo apt-get install -y -qq jq ripgrep
 
       - name: Check for OPENAI_API_KEY

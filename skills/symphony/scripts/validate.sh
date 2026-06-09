@@ -22,6 +22,9 @@ for required in "repo:<key>" "needs-triage" "ready-for-agent" "symphony ticket c
   rg -n "${required}" "${SKILL_MD}" >/dev/null || fail "SKILL.md missing required text: ${required}"
 done
 
+rg -n -- "--state Todo" "${SKILL_MD}" >/dev/null || fail "SKILL.md missing --state Todo in Linear CLI examples"
+rg -n "Backlog is not dispatchable" "${SKILL_MD}" >/dev/null || fail "SKILL.md missing Backlog dispatch guardrail"
+
 skill_name="$(jq -r '.skill_name' "${EVALS_JSON}")"
 [[ "${skill_name}" == "symphony" ]] || fail "evals.json skill_name must be symphony"
 
