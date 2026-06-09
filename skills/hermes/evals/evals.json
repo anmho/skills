@@ -1,0 +1,134 @@
+{
+  "skill_name": "hermes",
+  "evals": [
+    {
+      "id": "restaurants-near-me-missing-location",
+      "name": "Restaurants near me requires a search area",
+      "prompt": "Find restaurants near me.",
+      "expected_output": "Recognizes this as a local places request and asks for an area, address, neighborhood, or city because no user location is available. It does not infer precise location from IP, timezone, or profile data.",
+      "assertions": [
+        "Treats the request as a restaurants or local places lookup",
+        "Asks for an area, address, neighborhood, or city",
+        "Does not assume the user's current location",
+        "Mentions it can use a provided location",
+        "Does not provide fabricated restaurant results"
+      ]
+    },
+    {
+      "id": "place-open-now-live-hours",
+      "name": "Open-now status uses live hours",
+      "prompt": "Check if Tartine Manufactory in San Francisco is open now.",
+      "expected_output": "Uses a live maps/local-places or browser/search path to check current hours for the named place, gives the open-now result with local time context, and notes that hours can change.",
+      "assertions": [
+        "Uses a live-capable maps, places, browser, or search path",
+        "Checks current hours or open-now status",
+        "References the named place and city",
+        "Includes local time or date context",
+        "Does not rely only on static model memory"
+      ]
+    },
+    {
+      "id": "open-now-missing-place-context",
+      "name": "Open-now trigger asks for the place when context is missing",
+      "prompt": "Check if this place is open now.",
+      "expected_output": "Recognizes this as an hours/open-now local places request, but asks which place to check when no place is named and no current page or thread context identifies the place.",
+      "assertions": [
+        "Treats the request as an open-now or hours lookup",
+        "Asks which place to check",
+        "Mentions it can use a named place, address, or current page context",
+        "Does not fabricate an open-now answer",
+        "Keeps the answer in the maps/local places path"
+      ]
+    },
+    {
+      "id": "coffee-shops-within-ten-minutes",
+      "name": "Coffee search considers distance or travel time",
+      "prompt": "Find coffee shops within 10 minutes of Union Square, San Francisco.",
+      "expected_output": "Uses a live maps/local-places or browser/search path to find coffee shops near Union Square, ranks options by travel time or distance, and states the assumed travel mode or asks for it if necessary.",
+      "assertions": [
+        "Uses a live-capable maps, places, browser, or search path",
+        "Uses Union Square, San Francisco as the search area",
+        "Considers the 10 minute distance or travel-time constraint",
+        "States or asks for the travel mode",
+        "Returns or plans to return nearby coffee shop options"
+      ]
+    },
+    {
+      "id": "coffee-shops-within-ten-minutes-missing-origin",
+      "name": "Coffee within ten minutes requires an origin",
+      "prompt": "Find coffee shops within 10 minutes.",
+      "expected_output": "Recognizes the request as a maps/local places query and asks for the starting area, address, or neighborhood, plus travel mode if it matters, before searching.",
+      "assertions": [
+        "Treats the request as a coffee shop or local places lookup",
+        "Asks for a starting location or search area",
+        "Mentions the 10 minute travel-time constraint",
+        "States or asks for travel mode if needed",
+        "Does not fabricate nearby coffee shop results"
+      ]
+    },
+    {
+      "id": "cuisine-preference-local-ranking",
+      "name": "Cuisine preferences influence local ranking",
+      "prompt": "Find a spicy vegetarian Thai restaurant near downtown Oakland tonight.",
+      "expected_output": "Uses local place lookup for downtown Oakland, filters or ranks by Thai cuisine, spicy vegetarian fit, and tonight/open-hours constraints, then gives practical tradeoffs.",
+      "assertions": [
+        "Uses a live-capable maps, places, browser, or search path",
+        "Uses downtown Oakland as the location",
+        "Considers Thai cuisine",
+        "Considers spicy vegetarian preference",
+        "Considers tonight or open-hours fit"
+      ]
+    },
+    {
+      "id": "compare-two-menus",
+      "name": "Menu comparison uses current menu sources",
+      "prompt": "Compare the menus for Nopalito and La Taqueria in San Francisco and tell me where to eat.",
+      "expected_output": "Uses browser/search or local place sources to inspect current menus, compares the two restaurants by menu fit and practical context like hours or distance when available, and recommends one with a clear reason.",
+      "assertions": [
+        "Uses browser, search, maps, or local place sources for menu lookup",
+        "Compares both named restaurants",
+        "Discusses menu fit or dishes",
+        "Considers practical local context such as hours, distance, or location",
+        "Makes a concrete recommendation"
+      ]
+    },
+    {
+      "id": "compare-these-two-menus-missing-context",
+      "name": "Menu comparison trigger asks for the two menus when missing",
+      "prompt": "Compare these two menus and tell me where to eat.",
+      "expected_output": "Recognizes this as a menu comparison request but asks for the two restaurant names, menu links, or visible menu context before comparing, and notes that current menu sources are needed.",
+      "assertions": [
+        "Treats the request as a menu comparison",
+        "Asks for two restaurant names, menu links, or visible menu context",
+        "Mentions current menu sources or live lookup",
+        "Does not invent menu details",
+        "Does not force a recommendation without the two menus"
+      ]
+    },
+    {
+      "id": "negative-non-local-food-ideas",
+      "name": "Non-local food ideation should not force maps",
+      "prompt": "Give me dinner ideas that use chickpeas and spinach.",
+      "expected_output": "Answers as a general food-ideas or recipe request without invoking maps, restaurants, nearby search, or location collection.",
+      "assertions": [
+        "Does not ask for location",
+        "Does not use maps or local places",
+        "Provides general dinner ideas or recipe-style suggestions",
+        "Does not frame the answer as nearby restaurant search"
+      ]
+    },
+    {
+      "id": "negative-live-location-unavailable",
+      "name": "Live location unavailable requires explicit fallback",
+      "prompt": "Use my live location and find the closest open sushi place.",
+      "expected_output": "Explains that live location is not available unless the user provides it or a location tool is present, asks for an area/address/neighborhood, and avoids using inferred or fabricated location data.",
+      "assertions": [
+        "Says live location is not available or needs to be provided",
+        "Asks for an area, address, neighborhood, or city",
+        "Does not infer location from IP, profile, or timezone",
+        "Does not fabricate nearby sushi results",
+        "Keeps the request in the maps/local places path once location is provided"
+      ]
+    }
+  ]
+}
