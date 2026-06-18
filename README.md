@@ -17,7 +17,9 @@ npx skills add anmho/skills --skill grafana-investigation --global -y
 npx skills add anmho/skills --skill hermes --global -y
 npx skills add anmho/skills --skill infrastructure-investigation --global -y
 npx skills add anmho/skills --skill auth --global -y
+npx skills add anmho/skills --skill app-store-revenuecat-automation --global -y
 npx skills add anmho/skills --skill notifications --global -y
+npx skills add anmho/skills --skill mobile-automation-cli --global -y
 npx skills add anmho/skills --skill stack-debugging --global -y
 npx skills add anmho/skills --skill symphony --global -y
 npx skills add anmho/skills --skill tab-organizer-cleanup --global -y
@@ -37,6 +39,8 @@ scripts/skills.sh install grafana-investigation
 scripts/skills.sh install hermes
 scripts/skills.sh install infrastructure-investigation
 scripts/skills.sh install auth
+scripts/skills.sh install app-store-revenuecat-automation
+scripts/skills.sh install mobile-automation-cli
 scripts/skills.sh install notifications
 scripts/skills.sh install stack-debugging anmho/skills --agent codex claude-code
 scripts/skills.sh install auth anmho/skills --agent codex claude-code
